@@ -22,10 +22,10 @@ async function loadTests() {
 
         if (!Array.isArray(tests) || tests.length === 0) {
             listEl.innerHTML = `
-                <div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 3rem; background: rgba(15,23,42,0.4); border-radius: var(--radius-lg); border: 1px dashed var(--border-color);">
+                <div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 3rem; background: #ffffff; border-radius: var(--radius-lg); border: 2px dashed var(--border-color);">
                     <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📝</div>
-                    <div style="font-weight: 600; font-size: 1.1rem; color: var(--text-primary);">No tests created yet</div>
-                    <p style="font-size: 0.9rem; margin-top: 0.25rem;">Click "+ Create New Test" above to build your first post-lesson test!</p>
+                    <div style="font-weight: 700; font-size: 1.15rem; color: var(--text-primary);">Nu au fost create teste încă</div>
+                    <p style="font-size: 0.95rem; margin-top: 0.25rem; color: var(--text-muted);">Apasă pe "+ Creează Test Nou" de mai sus pentru a construi primul tău test de lecție!</p>
                 </div>
             `;
             return;
@@ -33,23 +33,23 @@ async function loadTests() {
 
         tests.forEach(test => {
             const card = document.createElement('div');
-            card.style.cssText = 'background: rgba(15,23,42,0.6); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;';
+            card.style.cssText = 'background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.03);';
             card.innerHTML = `
                 <div>
-                    <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">${escapeHtml(test.title)}</h3>
-                    <div style="display: flex; gap: 1rem; color: var(--text-secondary); font-size: 0.85rem;">
-                        <span>⏱️ ${test.duration_minutes} mins</span>
-                        <span>❓ ${test.question_count} questions</span>
+                    <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">${escapeHtml(test.title)}</h3>
+                    <div style="display: flex; gap: 1rem; color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;">
+                        <span>⏱️ ${test.duration_minutes} min</span>
+                        <span>❓ ${test.question_count} întrebări</span>
                     </div>
                 </div>
                 <div style="display: flex; gap: 0.5rem;">
-                    <button class="btn btn-primary btn-full" onclick="launchSession('${test.id}')">🖥️ Launch Test</button>
+                    <button class="btn btn-primary btn-full" onclick="launchSession('${test.id}')">🖥️ Lansează Testul</button>
                 </div>
             `;
             listEl.appendChild(card);
         });
     } catch (err) {
-        loadingEl.innerText = 'Failed to load tests. Please check connection.';
+        loadingEl.innerText = 'Eroare la încărcarea testelor. Verifică conexiunea.';
         console.error(err);
     }
 }
@@ -78,37 +78,37 @@ function addQuestionField() {
     qDiv.id = `q-card-${questionCount}`;
     qDiv.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-            <strong style="font-family: var(--font-heading); color: var(--accent-blue);">Question #${questionCount}</strong>
-            ${questionCount > 1 ? `<button type="button" onclick="removeQuestionField(${questionCount})" style="background:none; border:none; color: var(--accent-red); cursor:pointer;">Remove</button>` : ''}
+            <strong style="font-family: var(--font-heading); color: var(--accent-blue); font-size: 1.05rem;">Întrebarea #${questionCount}</strong>
+            ${questionCount > 1 ? `<button type="button" onclick="removeQuestionField(${questionCount})" style="background:none; border:none; color: var(--accent-red); cursor:pointer; font-weight:600;">Șterge</button>` : ''}
         </div>
         <div class="form-group">
-            <input type="text" class="form-input q-text" placeholder="Enter question text..." required>
+            <input type="text" class="form-input q-text" placeholder="Introdu textul întrebării..." required>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
             <div>
-                <label class="form-label">Option A</label>
-                <input type="text" class="form-input q-opt-a" placeholder="Answer choice A" required>
+                <label class="form-label">Opțiunea A</label>
+                <input type="text" class="form-input q-opt-a" placeholder="Varianta A" required>
             </div>
             <div>
-                <label class="form-label">Option B</label>
-                <input type="text" class="form-input q-opt-b" placeholder="Answer choice B" required>
+                <label class="form-label">Opțiunea B</label>
+                <input type="text" class="form-input q-opt-b" placeholder="Varianta B" required>
             </div>
             <div>
-                <label class="form-label">Option C</label>
-                <input type="text" class="form-input q-opt-c" placeholder="Answer choice C" required>
+                <label class="form-label">Opțiunea C</label>
+                <input type="text" class="form-input q-opt-c" placeholder="Varianta C" required>
             </div>
             <div>
-                <label class="form-label">Option D</label>
-                <input type="text" class="form-input q-opt-d" placeholder="Answer choice D" required>
+                <label class="form-label">Opțiunea D</label>
+                <input type="text" class="form-input q-opt-d" placeholder="Varianta D" required>
             </div>
         </div>
         <div class="form-group" style="margin-top: 0.75rem;">
-            <label class="form-label">Correct Option</label>
+            <label class="form-label">Opțiunea Corectă</label>
             <select class="form-select q-correct" required>
-                <option value="A">Option A</option>
-                <option value="B">Option B</option>
-                <option value="C">Option C</option>
-                <option value="D">Option D</option>
+                <option value="A">Opțiunea A</option>
+                <option value="B">Opțiunea B</option>
+                <option value="C">Opțiunea C</option>
+                <option value="D">Opțiunea D</option>
             </select>
         </div>
     `;
@@ -142,7 +142,7 @@ async function handleCreateTest(e) {
     });
 
     if (questions.length === 0) {
-        alert('Please add at least one complete question.');
+        alert('Te rugăm să adaugi cel puțin o întrebare completă.');
         return;
     }
 
@@ -157,10 +157,10 @@ async function handleCreateTest(e) {
             closeCreateTestModal();
             loadTests();
         } else {
-            alert('Error creating test: ' + (data.error || 'Unknown error'));
+            alert('Eroare la crearea testului: ' + (data.error || 'Eroare necunoscută'));
         }
     } catch (err) {
-        alert('Server connection error');
+        alert('Eroare de conexiune cu serverul.');
         console.error(err);
     }
 }
@@ -184,10 +184,10 @@ async function launchSession(testId) {
             openBigScreenModal();
             startPollingResults();
         } else {
-            alert('Failed to launch session: ' + data.error);
+            alert('Eșec la lansarea sesiunii: ' + data.error);
         }
     } catch (err) {
-        alert('Connection error launching session.');
+        alert('Eroare de conexiune la lansarea sesiunii.');
         console.error(err);
     }
 }
@@ -225,7 +225,7 @@ function closeBigScreenModal() {
 function showActiveResultsSection() {
     const sec = document.getElementById('active-results-section');
     sec.style.display = 'block';
-    document.getElementById('results-session-title').innerText = `📊 Live Results: ${activeSessionTitle}`;
+    document.getElementById('results-session-title').innerText = `📊 Rezultate în Direct: ${activeSessionTitle}`;
     document.getElementById('results-session-code').innerText = activeSessionCode;
     sec.scrollIntoView({ behavior: 'smooth' });
 }
@@ -250,7 +250,6 @@ async function refreshResults() {
         document.getElementById('stat-total-students').innerText = data.total_students;
         document.getElementById('big-screen-count').innerText = data.total_students;
 
-        let totalQ = data.session ? data.session.total_questions || 1 : 1;
         document.getElementById('stat-avg-score').innerText = `${data.average_score}`;
 
         // Populate table
@@ -259,7 +258,7 @@ async function refreshResults() {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
-                        Waiting for students to join and submit test answers...
+                        Se așteaptă ca studenții să se alăture și să trimită răspunsurile...
                     </td>
                 </tr>
             `;
@@ -304,7 +303,7 @@ async function handleRestoreFileSelect(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    if (!confirm(`Are you sure you want to restore data from "${file.name}"? This will update your tests and results database.`)) {
+    if (!confirm(`Ești sigur că vrei să restabilești datele din "${file.name}"? Aceasta va actualiza baza de date cu teste și rezultate.`)) {
         event.target.value = '';
         return;
     }
@@ -321,16 +320,15 @@ async function handleRestoreFileSelect(event) {
 
         const data = await res.json();
         if (data.success) {
-            alert('✅ Data restored successfully!');
+            alert('✅ Datele au fost restabilite cu succes!');
             loadTests();
         } else {
-            alert('❌ Restore failed: ' + (data.error || 'Unknown error'));
+            alert('❌ Restabilirea a eșuat: ' + (data.error || 'Eroare necunoscută'));
         }
     } catch (err) {
-        alert('Invalid JSON backup file or server error.');
+        alert('Fișier JSON nevalid sau eroare de server.');
         console.error(err);
     } finally {
         event.target.value = '';
     }
 }
-

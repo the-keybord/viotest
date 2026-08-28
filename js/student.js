@@ -20,7 +20,7 @@ async function handleJoinTest(e) {
     const studentId = document.getElementById('student-id-input').value.trim();
 
     if (!code || !name) {
-        alert('Please fill in session code and your name.');
+        alert('Te rugăm să introduci codul sesiunii și numele tău.');
         return;
     }
 
@@ -29,7 +29,7 @@ async function handleJoinTest(e) {
         const sessionData = await res.json();
 
         if (sessionData.error) {
-            alert('Invalid session code or session closed.');
+            alert('Cod de sesiune nevalid sau sesiunea a fost închisă.');
             return;
         }
 
@@ -53,7 +53,7 @@ async function handleJoinTest(e) {
         startTimer(durationMins * 60);
 
     } catch (err) {
-        alert('Connection error joining test session.');
+        alert('Eroare de conexiune la intrarea în sesiunea de testare.');
         console.error(err);
     }
 }
@@ -63,7 +63,7 @@ function renderQuestions(questions) {
     container.innerHTML = '';
 
     if (!questions || questions.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-secondary);">No questions found for this test.</p>';
+        container.innerHTML = '<p style="color: var(--text-secondary);">Nu s-au găsit întrebări pentru acest test.</p>';
         return;
     }
 
@@ -72,7 +72,7 @@ function renderQuestions(questions) {
         qCard.className = 'question-card';
         qCard.innerHTML = `
             <div class="question-title">
-                <strong style="color: var(--accent-blue);">Q${idx + 1}.</strong> ${escapeHtml(q.question_text)}
+                <strong style="color: var(--accent-blue);">Î${idx + 1}.</strong> ${escapeHtml(q.question_text)}
             </div>
             <div class="options-grid">
                 <button type="button" class="option-btn" onclick="selectOption('${q.id}', 'A', this)">
@@ -116,7 +116,7 @@ function startTimer(totalSecs) {
 
         if (remainingSeconds <= 0) {
             clearInterval(timerInterval);
-            alert('⏱️ Time has expired! Your test is submitting automatically...');
+            alert('⏱️ Timpul a expirat! Testul tău se trimite automat...');
             autoSubmitTest();
         }
     }, 1000);
@@ -140,7 +140,7 @@ function updateTimerDisplay() {
 }
 
 function confirmAndSubmitTest() {
-    if (confirm('Are you sure you want to submit your test answers now?')) {
+    if (confirm('Ești sigur că vrei să trimiți răspunsurile la test acum?')) {
         submitAnswers();
     }
 }
@@ -179,10 +179,10 @@ async function submitAnswers() {
         if (data.success) {
             displayScoreCard(data);
         } else {
-            alert('Error submitting test: ' + data.error);
+            alert('Eroare la trimiterea testului: ' + data.error);
         }
     } catch (err) {
-        alert('Server error submitting test. Please contact teacher.');
+        alert('Eroare de server la trimiterea testului. Te rugăm să contactezi profesorul.');
         console.error(err);
     }
 }
@@ -213,20 +213,20 @@ function displayScoreCard(data) {
     if (data.details && Array.isArray(data.details)) {
         data.details.forEach((item, idx) => {
             const div = document.createElement('div');
-            div.style.cssText = 'background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 0.75rem;';
+            div.style.cssText = 'background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 0.75rem;';
             
             const isCorrect = item.is_correct;
-            const statusIcon = isCorrect ? '✅ Correct' : '❌ Incorrect';
+            const statusIcon = isCorrect ? '✅ Corect' : '❌ Incorect';
             const statusColor = isCorrect ? 'var(--accent-green)' : 'var(--accent-red)';
 
             div.innerHTML = `
-                <div style="display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 0.5rem;">
-                    <span>Q${idx + 1}: ${escapeHtml(item.question_text)}</span>
+                <div style="display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">
+                    <span>Î${idx + 1}: ${escapeHtml(item.question_text)}</span>
                     <span style="color: ${statusColor}; font-size: 0.9rem;">${statusIcon}</span>
                 </div>
-                <div style="font-size: 0.9rem; color: var(--text-secondary);">
-                    Your Choice: <strong style="color: var(--text-primary);">${item.chosen_option || 'None'}</strong> | 
-                    Correct Answer: <strong style="color: var(--accent-green);">${item.correct_option}</strong>
+                <div style="font-size: 0.95rem; color: var(--text-secondary);">
+                    Alegerea Ta: <strong style="color: var(--text-primary);">${item.chosen_option || 'Niciunul'}</strong> | 
+                    Răspuns Corect: <strong style="color: var(--accent-green);">${item.correct_option}</strong>
                 </div>
             `;
             reviewContainer.appendChild(div);

@@ -1,30 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ro">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>University Test Platform - Teacher Dashboard</title>
+    <title>VioTest - Panou Profesor</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
     <header>
         <a href="index.html" class="brand">
-            🎓 UniTest <span class="brand-badge">Teacher</span>
+            🎓 VioTest <span class="brand-badge">Profesor</span>
         </a>
-        <div style="display: flex; gap: 0.75rem;">
-            <a href="api/backup.php" class="btn btn-secondary" title="Download backup of tests and results">💾 Backup Data</a>
-            <button class="btn btn-secondary" onclick="document.getElementById('restore-file-input').click()" title="Restore tests and results from backup JSON file">📥 Restore Data</button>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a href="api/backup.php" class="btn btn-secondary" title="Descarcă o copie de rezervă a testelor și rezultatelor">💾 Copie de Rezervă</a>
+            <button class="btn btn-secondary" onclick="document.getElementById('restore-file-input').click()" title="Restabilește datele dintr-un fișier JSON de rezervă">📥 Restabilește Datele</button>
             <input type="file" id="restore-file-input" accept=".json" onchange="handleRestoreFileSelect(event)" style="display: none;">
-            <button class="btn btn-primary" onclick="openCreateTestModal()">+ Create New Test</button>
+            <button class="btn btn-primary" onclick="openCreateTestModal()">+ Creează Test Nou</button>
         </div>
     </header>
 
     <main class="container">
         <!-- TEST MANAGEMENT SECTION -->
         <section class="card">
-            <h2 class="card-title">📚 Available Tests</h2>
+            <h2 class="card-title">📚 Teste Disponibile</h2>
             <div id="tests-loading" style="color: var(--text-secondary); text-align: center; padding: 2rem;">
-                Loading tests...
+                Se încarcă testele...
             </div>
             <div id="tests-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem;"></div>
         </section>
@@ -33,26 +33,26 @@
         <section id="active-results-section" class="card" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                 <div>
-                    <h2 class="card-title" id="results-session-title">📊 Live Test Results</h2>
+                    <h2 class="card-title" id="results-session-title">📊 Rezultate Test în Direct</h2>
                     <p style="color: var(--text-secondary); font-size: 0.95rem;">
-                        Session Code: <strong id="results-session-code" style="color: var(--accent-blue);">--</strong>
+                        Cod Sesiune: <strong id="results-session-code" style="color: var(--accent-blue);">--</strong>
                     </p>
                 </div>
                 <div style="display: flex; gap: 0.75rem;">
-                    <button class="btn btn-secondary" onclick="openBigScreenForActiveSession()">🖥️ Open Big Screen (QR)</button>
-                    <button class="btn btn-secondary" onclick="refreshResults()">🔄 Refresh Results</button>
+                    <button class="btn btn-secondary" onclick="openBigScreenForActiveSession()">🖥️ Deschide pe Ecran Mare (QR)</button>
+                    <button class="btn btn-secondary" onclick="refreshResults()">🔄 Actualizează Rezultatele</button>
                 </div>
             </div>
 
             <!-- Stats Summary Cards -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-                <div style="background: rgba(15, 23, 42, 0.6); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
-                    <div style="font-size: 0.85rem; color: var(--text-secondary);">Total Students</div>
+                <div style="background: #f8fafc; padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600;">Total Studenți</div>
                     <div id="stat-total-students" style="font-family: var(--font-heading); font-size: 2.2rem; font-weight: 800; color: var(--accent-blue);">0</div>
                 </div>
-                <div style="background: rgba(15, 23, 42, 0.6); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
-                    <div style="font-size: 0.85rem; color: var(--text-secondary);">Average Score</div>
-                    <div id="stat-avg-score" style="font-family: var(--font-heading); font-size: 2.2rem; font-weight: 800; color: var(--accent-green);">0%</div>
+                <div style="background: #f8fafc; padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600;">Media Notei</div>
+                    <div id="stat-avg-score" style="font-family: var(--font-heading); font-size: 2.2rem; font-weight: 800; color: var(--accent-green);">0</div>
                 </div>
             </div>
 
@@ -61,17 +61,17 @@
                 <table class="results-table">
                     <thead>
                         <tr>
-                            <th>Student Name</th>
-                            <th>Student ID</th>
-                            <th>Score</th>
-                            <th>Percentage</th>
-                            <th>Submitted At</th>
+                            <th>Nume Student</th>
+                            <th>ID Student</th>
+                            <th>Punctaj</th>
+                            <th>Procentaj</th>
+                            <th>Trimis la</th>
                         </tr>
                     </thead>
                     <tbody id="results-table-body">
                         <tr>
                             <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
-                                Waiting for students to complete test...
+                                Se așteaptă ca studenții să finalizeze testul...
                             </td>
                         </tr>
                     </tbody>
@@ -81,36 +81,36 @@
     </main>
 
     <!-- CREATE TEST MODAL -->
-    <div id="create-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 500; overflow-y: auto; padding: 2rem 1rem;">
-        <div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div id="create-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 500; overflow-y: auto; padding: 2rem 1rem;">
+        <div class="card" style="max-width: 800px; margin: 0 auto; box-shadow: 0 20px 50px rgba(0,0,0,0.15);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h2 class="card-title">📝 Create New Test</h2>
+                <h2 class="card-title">📝 Creează un Test Nou</h2>
                 <button onclick="closeCreateTestModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer;">✕</button>
             </div>
 
             <form id="create-test-form" onsubmit="handleCreateTest(event)">
                 <div class="form-group">
-                    <label class="form-label">Test Title / Lesson Topic</label>
-                    <input type="text" id="test-title" class="form-input" placeholder="e.g. Computer Science - Lecture 4 Quiz" required>
+                    <label class="form-label">Titlul Testului / Subiectul Lecției</label>
+                    <input type="text" id="test-title" class="form-input" placeholder="ex. Fizică Cuantică - Test Cursul 3" required>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Time Limit (Minutes)</label>
+                    <label class="form-label">Limită de Timp (Minute)</label>
                     <input type="number" id="test-duration" class="form-input" min="1" max="180" value="5" required>
                 </div>
 
                 <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h3 style="font-family: var(--font-heading); font-size: 1.2rem;">Questions (1 of 4 Choice)</h3>
-                    <button type="button" class="btn btn-secondary" onclick="addQuestionField()">+ Add Question</button>
+                    <h3 style="font-family: var(--font-heading); font-size: 1.2rem;">Întrebări (Selectează 1 din 4 opțiuni)</h3>
+                    <button type="button" class="btn btn-secondary" onclick="addQuestionField()">+ Adaugă Întrebare</button>
                 </div>
 
                 <div id="questions-container"></div>
 
                 <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
-                    <button type="button" class="btn btn-secondary" onclick="closeCreateTestModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Test</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateTestModal()">Anulează</button>
+                    <button type="submit" class="btn btn-primary">Salvează Testul</button>
                 </div>
             </form>
         </div>
@@ -120,34 +120,34 @@
     <div id="big-screen-modal" class="big-screen-modal" style="display: none;">
         <div class="big-screen-header">
             <div>
-                <span class="brand-badge" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Live Test Session</span>
-                <h1 id="big-screen-title" style="font-family: var(--font-heading); font-size: 2.2rem; margin-top: 0.5rem;">Lesson Quiz</h1>
+                <span class="brand-badge" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Sesiune Test în Direct</span>
+                <h1 id="big-screen-title" style="font-family: var(--font-heading); font-size: 2.2rem; margin-top: 0.5rem; color: var(--text-primary);">Test Lecție</h1>
             </div>
-            <button class="btn btn-secondary" onclick="closeBigScreenModal()">Close Big Screen Mode</button>
+            <button class="btn btn-secondary" onclick="closeBigScreenModal()">Închide Modul Ecran Mare</button>
         </div>
 
         <div class="big-screen-content">
             <div class="qr-box">
                 <div id="big-screen-qr"></div>
                 <div style="color: #0f172a; font-family: var(--font-heading); font-weight: 700; margin-top: 1rem; font-size: 1.1rem;">
-                    Scan with Mobile Camera to Start Test
+                    Scanează cu camera telefonului pentru a începe testul
                 </div>
             </div>
 
             <div style="display: flex; flex-direction: column; justify-content: center; gap: 1.5rem;">
                 <div>
-                    <div style="font-size: 1.1rem; color: var(--text-secondary); font-weight: 500;">Step 1: Scan QR Code or go to:</div>
+                    <div style="font-size: 1.1rem; color: var(--text-secondary); font-weight: 600;">Pasul 1: Scanează codul QR sau accesează:</div>
                     <div class="big-join-url" id="big-screen-url">http://.../student.html</div>
                 </div>
 
                 <div>
-                    <div style="font-size: 1.1rem; color: var(--text-secondary); font-weight: 500;">Step 2: Enter Session Code:</div>
+                    <div style="font-size: 1.1rem; color: var(--text-secondary); font-weight: 600;">Pasul 2: Introdu Codul de Sesiune:</div>
                     <div class="big-session-code" id="big-screen-code">000000</div>
                 </div>
 
-                <div style="background: rgba(30, 41, 59, 0.8); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: var(--radius-lg); margin-top: 1rem;">
+                <div style="background: #f8fafc; border: 2px solid var(--border-color); padding: 1.5rem; border-radius: var(--radius-lg); margin-top: 1rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 1.2rem; font-weight: 600;">Students Submitted:</span>
+                        <span style="font-size: 1.2rem; font-weight: 700;">Studenți care au trimis:</span>
                         <span id="big-screen-count" style="font-family: var(--font-heading); font-size: 2.5rem; font-weight: 800; color: var(--accent-green);">0</span>
                     </div>
                 </div>
