@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Test Platform - Student Portal</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <a href="#" class="brand">
+            🎓 UniTest <span class="brand-badge">Student</span>
+        </a>
+        <div id="header-student-info" style="font-size: 0.9rem; color: var(--text-secondary);"></div>
+    </header>
+
+    <main class="student-container">
+        <!-- JOIN TEST SCREEN -->
+        <div id="join-card" class="card">
+            <h2 class="card-title">✍️ Join Test Session</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem;">
+                Enter your details to begin the timed test session.
+            </p>
+
+            <form id="join-form" onsubmit="handleJoinTest(event)">
+                <div class="form-group">
+                    <label class="form-label">Session Code</label>
+                    <input type="text" id="session-code" class="form-input" style="font-family: var(--font-heading); font-size: 1.5rem; letter-spacing: 2px; text-align: center;" placeholder="6-digit code" maxlength="6" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" id="student-name" class="form-input" placeholder="e.g. Alex Johnson" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Student ID (Optional)</label>
+                    <input type="text" id="student-id-input" class="form-input" placeholder="e.g. ST-2026-894">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg btn-full" style="margin-top: 1rem;">
+                    🚀 Start Test Now
+                </button>
+            </form>
+        </div>
+
+        <!-- ACTIVE TEST VIEW -->
+        <div id="test-view" style="display: none;">
+            <!-- Countdown Timer Header -->
+            <div id="timer-badge" class="timer-badge">
+                <div>
+                    <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary);">Time Remaining</div>
+                    <div id="timer-clock" class="timer-clock">00:00</div>
+                </div>
+                <button class="btn btn-success" onclick="confirmAndSubmitTest()">Submit Test ✓</button>
+            </div>
+
+            <div class="card" style="margin-bottom: 1rem;">
+                <h2 id="test-title-display" class="card-title">Test Title</h2>
+                <div style="color: var(--text-secondary); font-size: 0.9rem;">Select 1 answer for each question below:</div>
+            </div>
+
+            <!-- Questions Form -->
+            <form id="test-questions-form" onsubmit="handleManualSubmit(event)">
+                <div id="questions-list"></div>
+
+                <div style="margin-top: 2rem; margin-bottom: 3rem;">
+                    <button type="submit" class="btn btn-success btn-lg btn-full">
+                        Submit Test Answers ✓
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- SCORE SUMMARY CARD -->
+        <div id="score-card" class="card" style="display: none; text-align: center; padding: 3rem 1.5rem;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+            <h2 class="card-title" style="justify-content: center;">Test Submitted Successfully!</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+                Thank you <strong id="score-student-name" style="color: var(--text-primary);">Student</strong>, your answers have been recorded.
+            </p>
+
+            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border-color); border-radius: var(--radius-xl); padding: 2rem; max-width: 360px; margin: 0 auto 2rem;">
+                <div style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Your Score</div>
+                <div id="score-display" style="font-family: var(--font-heading); font-size: 3.5rem; font-weight: 800; color: var(--accent-blue); margin: 0.5rem 0;">0 / 0</div>
+                <div id="score-percentage-badge" class="score-tag high" style="font-size: 1.1rem; padding: 0.5rem 1.25rem;">0%</div>
+            </div>
+
+            <h3 style="font-family: var(--font-heading); text-align: left; margin-bottom: 1rem;">Detailed Answer Review:</h3>
+            <div id="answers-review-container" style="text-align: left;"></div>
+        </div>
+    </main>
+
+    <script src="js/student.js"></script>
+</body>
+</html>
