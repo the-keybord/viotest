@@ -12,7 +12,7 @@
             🎓 VioTest <span class="brand-badge">Profesor</span>
         </a>
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button class="btn btn-secondary" onclick="openXmlImportModal()" title="Importă un test dintr-un fișier XML">📄 Importă XML</button>
+            <button id="btn-import-xml" class="btn btn-secondary" onclick="openXmlImportModal()" title="Importă un test dintr-un fișier XML">📄 Importă XML</button>
             <a href="api/backup.php" class="btn btn-secondary" title="Descarcă o copie de rezervă a testelor și rezultatelor">💾 Backup</a>
             <button class="btn btn-secondary" onclick="document.getElementById('restore-file-input').click()" title="Restabilește datele dintr-un fișier JSON de rezervă">📥 Restabilește</button>
             <input type="file" id="restore-file-input" accept=".json" onchange="handleRestoreFileSelect(event)" style="display: none;">
@@ -228,6 +228,6 @@
     </div>
 
     <script src="js/qrcode.min.js"></script>
-    <script src="js/admin.js"></script>
+    <script src="js/admin.js?v=3"></script>
 </body>
 </html>

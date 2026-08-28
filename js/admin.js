@@ -129,13 +129,22 @@ function closeCreateTestModal() {
     document.getElementById('create-modal').style.display = 'none';
 }
 
-function openXmlImportModal() {
-    document.getElementById('xml-modal').style.display = 'block';
-}
+window.openXmlImportModal = function() {
+    const modal = document.getElementById('xml-modal');
+    if (modal) modal.style.display = 'block';
+};
 
-function closeXmlImportModal() {
-    document.getElementById('xml-modal').style.display = 'none';
-}
+window.closeXmlImportModal = function() {
+    const modal = document.getElementById('xml-modal');
+    if (modal) modal.style.display = 'none';
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const btnXml = document.getElementById('btn-import-xml');
+    if (btnXml) {
+        btnXml.addEventListener('click', window.openXmlImportModal);
+    }
+});
 
 async function handleXmlUpload(e) {
     e.preventDefault();
