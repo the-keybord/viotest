@@ -139,31 +139,46 @@ function closeXmlImportModal() {
 
 async function handleXmlUpload(e) {
     e.preventDefault();
+    const textInput = document.getElementById('xml-text-input').value.trim();
     const fileInput = document.getElementById('xml-file-input');
-    if (!fileInput.files || fileInput.files.length === 0) {
-        alert('Te rugăm să selectezi un fișier XML.');
-        return;
+
+    let xmlPayload = '';
+
+    if (textInput) {
+        xmlPayload = textInput;
+    } else if (fileInput.files && fileInput.files.length > 0) {
+        try {
+            xmlPayload = await fileInput.files[0].text();
+        } catch (err) {
+            alert('Eroare la citirea fișierului XML de pe calculator.');
+            return;
+        }
     }
 
-    const formData = new FormData();
-    formData.append('xml_file', fileInput.files[0]);
+    if (!xmlPayload || xmlPayload.trim() === '') {
+        alert('Te rugăm să lipiți textul XML sau să selectați un fișier XML.');
+        return;
+    }
 
     try {
         const res = await fetch('api/import_xml.php', {
             method: 'POST',
-            body: formData
+            headers: { 'Content-Type': 'application/xml; charset=utf-8' },
+            body: xmlPayload
         });
         const data = await res.json();
 
         if (data.success) {
             alert(`✅ Testul "${data.title}" (${data.question_count} întrebări) a fost importat cu succes!`);
+            document.getElementById('xml-text-input').value = '';
+            fileInput.value = '';
             closeXmlImportModal();
             loadTests();
         } else {
             alert('❌ Import eșuat: ' + (data.error || 'Eroare la procesarea XML'));
         }
     } catch (err) {
-        alert('Eroare de server la încărcarea fișierului XML.');
+        alert('Eroare de server la procesarea fișierului XML.');
         console.error(err);
     }
 }

@@ -15,64 +15,136 @@ if (isset($_FILES['xml_file']) && $_FILES['xml_file']['error'] === UPLOAD_ERR_OK
     $xmlContent = file_get_contents('php://input');
 }
 
+// Trim UTF-8 BOM if present
+$xmlContent = trim(preg_replace('/[\x00-\x1F\x7F\xEF\xBB\xBF]/', '', $xmlContent));
+
 if (empty($xmlContent)) {
     http_response_code(400);
     echo json_encode(['error' => 'No XML content provided']);
     exit();
 }
 
-// Disable external entity loading for security
 libxml_use_internal_errors(true);
 $xml = simplexml_load_string($xmlContent);
 
 if (!$xml) {
     $errors = libxml_get_errors();
     libxml_clear_errors();
+    $errMsg = 'Invalid XML format.';
+    if (!empty($errors)) {
+        $errMsg .= ' Error line ' . $errors[0]->line . ': ' . trim($errors[0]->message);
+    }
     http_response_code(400);
-    echo json_encode(['error' => 'Invalid XML format. Please check structure.']);
+    echo json_encode(['error' => $errMsg]);
     exit();
 }
 
-$title = isset($xml->title) ? trim((string)$xml->title) : '';
-$duration = isset($xml->duration_minutes) ? intval((string)$xml->duration_minutes) : 5;
-if ($duration < 1) $duration = 5;
+// Ultra-flexible Title Extraction
+$title = '';
+if (isset($xml->title)) $title = (string)$xml->title;
+elseif (isset($xml->name)) $title = (string)$xml->name;
+elseif (isset($xml->subject)) $title = (string)$xml->subject;
+elseif (isset($xml->topic)) $title = (string)$xml->topic;
+$title = trim($title);
 
 if (empty($title)) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Test title (<title>) is missing in XML']);
-    exit();
+    $title = 'Test Importat XML (' . date('d.m.Y H:i') . ')';
 }
 
-$questions = [];
-if (isset($xml->questions) && isset($xml->questions->question)) {
-    foreach ($xml->questions->question as $qNode) {
-        $text = trim((string)$qNode->text);
-        $optA = trim((string)$qNode->option_a);
-        $optB = trim((string)$qNode->option_b);
-        $optC = trim((string)$qNode->option_c);
-        $optD = trim((string)$qNode->option_d);
-        $correct = strtoupper(trim((string)$qNode->correct_option));
+// Duration Extraction
+$duration = 5;
+if (isset($xml->duration_minutes)) $duration = intval((string)$xml->duration_minutes);
+elseif (isset($xml->duration)) $duration = intval((string)$xml->duration);
+elseif (isset($xml->time_limit)) $duration = intval((string)$xml->time_limit);
+if ($duration < 1) $duration = 5;
 
-        if (!empty($text) && !empty($optA) && !empty($optB) && !empty($optC) && !empty($optD) && !empty($correct)) {
-            $questions[] = [
-                'text' => $text,
-                'a' => $optA,
-                'b' => $optB,
-                'c' => $optC,
-                'd' => $optD,
-                'correct' => $correct
-            ];
-        }
+// Ultra-flexible Question Extraction
+$questions = [];
+
+// Locate question nodes under root or under <questions>
+$qNodes = [];
+if (isset($xml->questions) && isset($xml->questions->question)) {
+    $qNodes = $xml->questions->question;
+} elseif (isset($xml->question)) {
+    $qNodes = $xml->question;
+} elseif (isset($xml->item)) {
+    $qNodes = $xml->item;
+}
+
+foreach ($qNodes as $qNode) {
+    // Question Text
+    $text = '';
+    if (isset($qNode->text)) $text = (string)$qNode->text;
+    elseif (isset($qNode->question_text)) $text = (string)$qNode->question_text;
+    elseif (isset($qNode->title)) $text = (string)$qNode->title;
+    elseif (isset($qNode->q)) $text = (string)$qNode->q;
+    $text = trim($text);
+
+    // Option A
+    $optA = '';
+    if (isset($qNode->option_a)) $optA = (string)$qNode->option_a;
+    elseif (isset($qNode->optionA)) $optA = (string)$qNode->optionA;
+    elseif (isset($qNode->a)) $optA = (string)$qNode->a;
+    elseif (isset($qNode->choice_a)) $optA = (string)$qNode->choice_a;
+    $optA = trim($optA);
+
+    // Option B
+    $optB = '';
+    if (isset($qNode->option_b)) $optB = (string)$qNode->option_b;
+    elseif (isset($qNode->optionB)) $optB = (string)$qNode->optionB;
+    elseif (isset($qNode->b)) $optB = (string)$qNode->b;
+    elseif (isset($qNode->choice_b)) $optB = (string)$qNode->choice_b;
+    $optB = trim($optB);
+
+    // Option C
+    $optC = '';
+    if (isset($qNode->option_c)) $optC = (string)$qNode->option_c;
+    elseif (isset($qNode->optionC)) $optC = (string)$qNode->optionC;
+    elseif (isset($qNode->c)) $optC = (string)$qNode->c;
+    elseif (isset($qNode->choice_c)) $optC = (string)$qNode->choice_c;
+    $optC = trim($optC);
+
+    // Option D
+    $optD = '';
+    if (isset($qNode->option_d)) $optD = (string)$qNode->option_d;
+    elseif (isset($qNode->optionD)) $optD = (string)$qNode->optionD;
+    elseif (isset($qNode->d)) $optD = (string)$qNode->d;
+    elseif (isset($qNode->choice_d)) $optD = (string)$qNode->choice_d;
+    $optD = trim($optD);
+
+    // Correct Option
+    $correct = '';
+    if (isset($qNode->correct_option)) $correct = (string)$qNode->correct_option;
+    elseif (isset($qNode->correctOption)) $correct = (string)$qNode->correctOption;
+    elseif (isset($qNode->correct)) $correct = (string)$qNode->correct;
+    elseif (isset($qNode->answer)) $correct = (string)$qNode->answer;
+    $correct = strtoupper(trim($correct));
+
+    // Normalize correct option if 1, 2, 3, 4 -> A, B, C, D
+    if ($correct === '1') $correct = 'A';
+    if ($correct === '2') $correct = 'B';
+    if ($correct === '3') $correct = 'C';
+    if ($correct === '4') $correct = 'D';
+
+    if (!empty($text) && !empty($optA) && !empty($optB) && !empty($optC) && !empty($optD) && !empty($correct)) {
+        $questions[] = [
+            'text' => $text,
+            'a' => $optA,
+            'b' => $optB,
+            'c' => $optC,
+            'd' => $optD,
+            'correct' => $correct
+        ];
     }
 }
 
 if (count($questions) === 0) {
     http_response_code(400);
-    echo json_encode(['error' => 'No valid questions found in XML file.']);
+    echo json_encode(['error' => 'Nu s-au găsit întrebări valide în fișierul XML. Verificați structura etichetelor <question>.']);
     exit();
 }
 
-// Save Test to Database
+// Save Test
 $testId = generateUuid();
 
 if ($useSqlite) {
@@ -102,7 +174,7 @@ if ($useSqlite) {
     } catch (Exception $e) {
         $pdo->rollBack();
         http_response_code(500);
-        echo json_encode(['error' => 'Database error importing XML: ' . $e->getMessage()]);
+        echo json_encode(['error' => 'Eroare la salvarea în baza de date: ' . $e->getMessage()]);
     }
 } else {
     $db = getJsonDbData();

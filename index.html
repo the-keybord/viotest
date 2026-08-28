@@ -169,8 +169,15 @@
 
             <form id="xml-upload-form" onsubmit="handleXmlUpload(event)">
                 <div class="form-group">
-                    <label class="form-label">Selectează fișierul XML de pe calculator:</label>
-                    <input type="file" id="xml-file-input" class="form-input" accept=".xml" required>
+                    <label class="form-label">Varianta 1: Inserați textul XML direct mai jos:</label>
+                    <textarea id="xml-text-input" class="form-textarea" rows="6" placeholder="Lipiți (paste) codul XML aici..."></textarea>
+                </div>
+
+                <div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0; font-weight: 600;">— SAU —</div>
+
+                <div class="form-group">
+                    <label class="form-label">Varianta 2: Selectați fișierul XML de pe calculator:</label>
+                    <input type="file" id="xml-file-input" class="form-input" accept=".xml">
                 </div>
 
                 <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
