@@ -299,3 +299,38 @@ function escapeHtml(str) {
               .replace(/"/g, "&quot;")
               .replace(/'/g, "&#039;");
 }
+
+async function handleRestoreFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!confirm(`Are you sure you want to restore data from "${file.name}"? This will update your tests and results database.`)) {
+        event.target.value = '';
+        return;
+    }
+
+    try {
+        const fileText = await file.text();
+        const jsonData = JSON.parse(fileText);
+
+        const res = await fetch('api/restore.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(jsonData)
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            alert('✅ Data restored successfully!');
+            loadTests();
+        } else {
+            alert('❌ Restore failed: ' + (data.error || 'Unknown error'));
+        }
+    } catch (err) {
+        alert('Invalid JSON backup file or server error.');
+        console.error(err);
+    } finally {
+        event.target.value = '';
+    }
+}
+

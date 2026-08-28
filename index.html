@@ -13,6 +13,8 @@
         </a>
         <div style="display: flex; gap: 0.75rem;">
             <a href="api/backup.php" class="btn btn-secondary" title="Download backup of tests and results">💾 Backup Data</a>
+            <button class="btn btn-secondary" onclick="document.getElementById('restore-file-input').click()" title="Restore tests and results from backup JSON file">📥 Restore Data</button>
+            <input type="file" id="restore-file-input" accept=".json" onchange="handleRestoreFileSelect(event)" style="display: none;">
             <button class="btn btn-primary" onclick="openCreateTestModal()">+ Create New Test</button>
         </div>
     </header>
