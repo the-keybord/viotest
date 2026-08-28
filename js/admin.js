@@ -6,6 +6,7 @@ let questionCount = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
     loadTests();
+    loadHistory();
 });
 
 // Load available tests
@@ -25,7 +26,7 @@ async function loadTests() {
                 <div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 3rem; background: #ffffff; border-radius: var(--radius-lg); border: 2px dashed var(--border-color);">
                     <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📝</div>
                     <div style="font-weight: 700; font-size: 1.15rem; color: var(--text-primary);">Nu au fost create teste încă</div>
-                    <p style="font-size: 0.95rem; margin-top: 0.25rem; color: var(--text-muted);">Apasă pe "+ Creează Test Nou" de mai sus pentru a construi primul tău test de lecție!</p>
+                    <p style="font-size: 0.95rem; margin-top: 0.25rem; color: var(--text-muted);">Apasă pe "+ Creează Test Nou" sau "📄 Importă XML" pentru a adăuga primul tău test!</p>
                 </div>
             `;
             return;
@@ -54,20 +55,117 @@ async function loadTests() {
     }
 }
 
+// Load test session history (ordered DESC)
+async function loadHistory() {
+    const loadingEl = document.getElementById('history-loading');
+    const listEl = document.getElementById('history-list');
+
+    try {
+        const res = await fetch('api/history.php');
+        const history = await res.json();
+
+        loadingEl.style.display = 'none';
+        listEl.innerHTML = '';
+
+        if (!Array.isArray(history) || history.length === 0) {
+            listEl.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 2rem; background: #ffffff; border-radius: var(--radius-lg); border: 1px dashed var(--border-color);">
+                    <div style="font-weight: 600; font-size: 1rem;">Nu există nicio sesiune de testare în istoric încă.</div>
+                </div>
+            `;
+            return;
+        }
+
+        history.forEach(item => {
+            const card = document.createElement('div');
+            card.style.cssText = 'background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.02);';
+
+            const dateStr = item.created_at ? new Date(item.created_at).toLocaleString('ro-RO') : '-';
+
+            card.innerHTML = `
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.4rem;">
+                        <h4 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">${escapeHtml(item.test_title)}</h4>
+                        <span style="background: #eff6ff; color: var(--accent-blue); padding: 0.2rem 0.5rem; border-radius: var(--radius-sm); font-weight: 700; font-size: 0.85rem;">${item.session_code}</span>
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">📅 ${dateStr}</div>
+                    <div style="display: flex; gap: 1.25rem; font-size: 0.9rem; color: var(--text-secondary); font-weight: 600;">
+                        <span>👥 Studenți: <strong style="color: var(--text-primary);">${item.total_students}</strong></span>
+                        <span>📈 Medie: <strong style="color: var(--accent-green);">${item.average_score}</strong></span>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-secondary btn-full" style="padding: 0.5rem 1rem; font-size: 0.9rem;" onclick="viewSessionResults('${item.session_id}', '${item.session_code}', '${escapeHtml(item.test_title)}')">📊 Vezi Rezultatele</button>
+                </div>
+            `;
+            listEl.appendChild(card);
+        });
+    } catch (err) {
+        loadingEl.innerText = 'Eroare la încărcarea istoricului.';
+        console.error(err);
+    }
+}
+
+function viewSessionResults(sessionId, code, title) {
+    activeSessionId = sessionId;
+    activeSessionCode = code;
+    activeSessionTitle = title;
+
+    showActiveResultsSection();
+    startPollingResults();
+}
+
 // Modal Handlers
 function openCreateTestModal() {
     document.getElementById('create-modal').style.display = 'block';
     const container = document.getElementById('questions-container');
     container.innerHTML = '';
     questionCount = 0;
-    
-    // Pre-populate with 2 default question fields
     addQuestionField();
     addQuestionField();
 }
 
 function closeCreateTestModal() {
     document.getElementById('create-modal').style.display = 'none';
+}
+
+function openXmlImportModal() {
+    document.getElementById('xml-modal').style.display = 'block';
+}
+
+function closeXmlImportModal() {
+    document.getElementById('xml-modal').style.display = 'none';
+}
+
+async function handleXmlUpload(e) {
+    e.preventDefault();
+    const fileInput = document.getElementById('xml-file-input');
+    if (!fileInput.files || fileInput.files.length === 0) {
+        alert('Te rugăm să selectezi un fișier XML.');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('xml_file', fileInput.files[0]);
+
+    try {
+        const res = await fetch('api/import_xml.php', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            alert(`✅ Testul "${data.title}" (${data.question_count} întrebări) a fost importat cu succes!`);
+            closeXmlImportModal();
+            loadTests();
+        } else {
+            alert('❌ Import eșuat: ' + (data.error || 'Eroare la procesarea XML'));
+        }
+    } catch (err) {
+        alert('Eroare de server la încărcarea fișierului XML.');
+        console.error(err);
+    }
 }
 
 function addQuestionField() {
@@ -183,6 +281,7 @@ async function launchSession(testId) {
             showActiveResultsSection();
             openBigScreenModal();
             startPollingResults();
+            loadHistory();
         } else {
             alert('Eșec la lansarea sesiunii: ' + data.error);
         }
@@ -249,7 +348,6 @@ async function refreshResults() {
         // Update stats
         document.getElementById('stat-total-students').innerText = data.total_students;
         document.getElementById('big-screen-count').innerText = data.total_students;
-
         document.getElementById('stat-avg-score').innerText = `${data.average_score}`;
 
         // Populate table
@@ -274,7 +372,7 @@ async function refreshResults() {
             if (pct >= 70) scoreClass = 'high';
             if (pct < 50) scoreClass = 'low';
 
-            const timeStr = new Date(sub.submitted_at).toLocaleTimeString();
+            const timeStr = new Date(sub.submitted_at).toLocaleTimeString('ro-RO');
 
             tr.innerHTML = `
                 <td style="font-weight: 600;">${escapeHtml(sub.student_name)}</td>
@@ -322,6 +420,7 @@ async function handleRestoreFileSelect(event) {
         if (data.success) {
             alert('✅ Datele au fost restabilite cu succes!');
             loadTests();
+            loadHistory();
         } else {
             alert('❌ Restabilirea a eșuat: ' + (data.error || 'Eroare necunoscută'));
         }

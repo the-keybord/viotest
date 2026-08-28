@@ -11,9 +11,10 @@
         <a href="index.html" class="brand">
             🎓 VioTest <span class="brand-badge">Profesor</span>
         </a>
-        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-            <a href="api/backup.php" class="btn btn-secondary" title="Descarcă o copie de rezervă a testelor și rezultatelor">💾 Copie de Rezervă</a>
-            <button class="btn btn-secondary" onclick="document.getElementById('restore-file-input').click()" title="Restabilește datele dintr-un fișier JSON de rezervă">📥 Restabilește Datele</button>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="btn btn-secondary" onclick="openXmlImportModal()" title="Importă un test dintr-un fișier XML">📄 Importă XML</button>
+            <a href="api/backup.php" class="btn btn-secondary" title="Descarcă o copie de rezervă a testelor și rezultatelor">💾 Backup</a>
+            <button class="btn btn-secondary" onclick="document.getElementById('restore-file-input').click()" title="Restabilește datele dintr-un fișier JSON de rezervă">📥 Restabilește</button>
             <input type="file" id="restore-file-input" accept=".json" onchange="handleRestoreFileSelect(event)" style="display: none;">
             <button class="btn btn-primary" onclick="openCreateTestModal()">+ Creează Test Nou</button>
         </div>
@@ -29,7 +30,7 @@
             <div id="tests-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem;"></div>
         </section>
 
-        <!-- LIVE SESSION RESULTS MONITOR -->
+        <!-- LIVE / SELECTED SESSION RESULTS MONITOR -->
         <section id="active-results-section" class="card" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                 <div>
@@ -78,6 +79,21 @@
                 </table>
             </div>
         </section>
+
+        <!-- SESSION HISTORY SECTION (ORDERED DESCENDING) -->
+        <section class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                <h2 class="card-title">📜 Istoric Sesiuni de Testare (Descrescător)</h2>
+                <button class="btn btn-secondary" onclick="loadHistory()">🔄 Actualizează Istoricul</button>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem;">
+                Toate sesiunile de testare create vreodată, ordonate cronologic descrescător după dată.
+            </p>
+            <div id="history-loading" style="color: var(--text-secondary); text-align: center; padding: 2rem;">
+                Se încarcă istoricul sesiunilor...
+            </div>
+            <div id="history-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.25rem;"></div>
+        </section>
     </main>
 
     <!-- CREATE TEST MODAL -->
@@ -111,6 +127,55 @@
                 <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
                     <button type="button" class="btn btn-secondary" onclick="closeCreateTestModal()">Anulează</button>
                     <button type="submit" class="btn btn-primary">Salvează Testul</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- XML IMPORT MODAL -->
+    <div id="xml-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 500; overflow-y: auto; padding: 2rem 1rem;">
+        <div class="card" style="max-width: 750px; margin: 0 auto; box-shadow: 0 20px 50px rgba(0,0,0,0.15);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 class="card-title">📄 Importă Test din fișier XML</h2>
+                <button onclick="closeXmlImportModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer;">✕</button>
+            </div>
+
+            <div style="background: #f8fafc; border: 1px solid var(--border-color); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;">
+                <div style="font-weight: 700; color: var(--accent-blue); margin-bottom: 0.5rem;">Model XML de Exemplu:</div>
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                    Puteți încărca teste dintr-un fișier XML structurat ca mai jos. Apăsați pe buton pentru a descărca fișierul model de exemplu:
+                </p>
+                <a href="sample_test.xml" download class="btn btn-secondary" style="font-size: 0.9rem; padding: 0.5rem 1rem; margin-bottom: 1rem;">
+                    📥 Descarcă Model XML Exemplu (`sample_test.xml`)
+                </a>
+                
+                <pre style="background: #0f172a; color: #38bdf8; padding: 1rem; border-radius: var(--radius-sm); font-size: 0.85rem; overflow-x: auto; max-height: 200px;">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;test&gt;
+    &lt;title&gt;Titlul Testului Tău&lt;/title&gt;
+    &lt;duration_minutes&gt;5&lt;/duration_minutes&gt;
+    &lt;questions&gt;
+        &lt;question&gt;
+            &lt;text&gt;Textul întrebării tale?&lt;/text&gt;
+            &lt;option_a&gt;Varianta A&lt;/option_a&gt;
+            &lt;option_b&gt;Varianta B&lt;/option_b&gt;
+            &lt;option_c&gt;Varianta C&lt;/option_c&gt;
+            &lt;option_d&gt;Varianta D&lt;/option_d&gt;
+            &lt;correct_option&gt;B&lt;/correct_option&gt;
+        &lt;/question&gt;
+    &lt;/questions&gt;
+&lt;/test&gt;</pre>
+            </div>
+
+            <form id="xml-upload-form" onsubmit="handleXmlUpload(event)">
+                <div class="form-group">
+                    <label class="form-label">Selectează fișierul XML de pe calculator:</label>
+                    <input type="file" id="xml-file-input" class="form-input" accept=".xml" required>
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeXmlImportModal()">Anulează</button>
+                    <button type="submit" class="btn btn-primary">🚀 Importă Testul Acum</button>
                 </div>
             </form>
         </div>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<test>
+    <title>Informatică - Cursul 1: Algoritmi și Structuri de Date</title>
+    <duration_minutes>5</duration_minutes>
+    <questions>
+        <question>
+            <text>Care este complexitatea de timp pentru căutarea binară într-un tablou sortat?</text>
+            <option_a>O(n)</option_a>
+            <option_b>O(log n)</option_b>
+            <option_c>O(n^2)</option_c>
+            <option_d>O(1)</option_d>
+            <correct_option>B</correct_option>
+        </question>
+        <question>
+            <text>Ce structură de date funcționează după principiul LIFO (Last In, First Out)?</text>
+            <option_a>Coada (Queue)</option_a>
+            <option_b>Lista Simplu Înlănțuită</option_b>
+            <option_c>Stiva (Stack)</option_c>
+            <option_d>Arborele Binar</option_d>
+            <correct_option>C</correct_option>
+        </question>
+        <question>
+            <text>Care dintre următoarele NU este un limbaj de programare compilat?</text>
+            <option_a>C++</option_a>
+            <option_b>Rust</option_b>
+            <option_c>Python</option_c>
+            <option_d>Go</option_d>
+            <correct_option>C</correct_option>
+        </question>
+    </questions>
+</test>
