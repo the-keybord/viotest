@@ -3,231 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VioTest - Panou Profesor</title>
-    <link rel="stylesheet" href="css/styles.css?v=2">
+    <title>vio.zece.info - Generează QR & Cod Rapid pentru Clasă</title>
+    <meta name="description" content="Partajează instant Google Forms, teste și link-uri în clasă: generează un cod QR mare și un link scurt de forma vio.zece.info/1234.">
+    
+    <!-- Open Graph for sharing -->
+    <meta property="og:title" content="vio.zece.info - Cod & QR Rapid">
+    <meta property="og:description" content="Partajare rapidă de link-uri și formulare pentru elevi.">
+    <meta property="og:type" content="website">
+
+    <link rel="stylesheet" href="css/styles.css?v=3">
 </head>
 <body>
-    <header>
-        <a href="index.html" class="brand">
-            🎓 VioTest <span class="brand-badge">Profesor</span>
-        </a>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button id="btn-import-xml" class="btn btn-secondary" onclick="openXmlImportModal()" title="Importă un test dintr-un fișier XML">📄 Importă XML</button>
-            <a href="api/backup.php" class="btn btn-secondary" title="Descarcă o copie de rezervă a testelor și rezultatelor">💾 Backup</a>
-            <button class="btn btn-secondary" onclick="document.getElementById('restore-file-input').click()" title="Restabilește datele dintr-un fișier JSON de rezervă">📥 Restabilește</button>
-            <input type="file" id="restore-file-input" accept=".json" onchange="handleRestoreFileSelect(event)" style="display: none;">
-            <button class="btn btn-primary" onclick="openCreateTestModal()">+ Creează Test Nou</button>
-        </div>
-    </header>
-
-    <main class="container">
-        <!-- TEST MANAGEMENT SECTION -->
-        <section class="card">
-            <h2 class="card-title">📚 Teste Disponibile</h2>
-            <div id="tests-loading" style="color: var(--text-secondary); text-align: center; padding: 2rem;">
-                Se încarcă testele...
-            </div>
-            <div id="tests-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem;"></div>
-        </section>
-
-        <!-- LIVE / SELECTED SESSION RESULTS MONITOR -->
-        <section id="active-results-section" class="card" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                <div>
-                    <h2 class="card-title" id="results-session-title">📊 Rezultate Test în Direct</h2>
-                    <p style="color: var(--text-secondary); font-size: 0.95rem;">
-                        Cod Sesiune: <strong id="results-session-code" style="color: var(--accent-blue);">--</strong>
-                    </p>
-                </div>
-                <div style="display: flex; gap: 0.75rem;">
-                    <button class="btn btn-secondary" onclick="openBigScreenForActiveSession()">🖥️ Deschide pe Ecran Mare (QR)</button>
-                    <button class="btn btn-secondary" onclick="refreshResults()">🔄 Actualizează Rezultatele</button>
-                </div>
-            </div>
-
-            <!-- Stats Summary Cards -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-                <div style="background: #f8fafc; padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
-                    <div style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600;">Total Studenți</div>
-                    <div id="stat-total-students" style="font-family: var(--font-heading); font-size: 2.2rem; font-weight: 800; color: var(--accent-blue);">0</div>
-                </div>
-                <div style="background: #f8fafc; padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
-                    <div style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600;">Media Notei</div>
-                    <div id="stat-avg-score" style="font-family: var(--font-heading); font-size: 2.2rem; font-weight: 800; color: var(--accent-green);">0</div>
-                </div>
-            </div>
-
-            <!-- Results Table -->
-            <div style="overflow-x: auto;">
-                <table class="results-table">
-                    <thead>
-                        <tr>
-                            <th>Nume Student</th>
-                            <th>ID Student</th>
-                            <th>Punctaj</th>
-                            <th>Procentaj</th>
-                            <th>Trimis la</th>
-                        </tr>
-                    </thead>
-                    <tbody id="results-table-body">
-                        <tr>
-                            <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
-                                Se așteaptă ca studenții să finalizeze testul...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- SESSION HISTORY SECTION (ORDERED DESCENDING) -->
-        <section class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
-                <h2 class="card-title">📜 Istoric Sesiuni de Testare (Descrescător)</h2>
-                <button class="btn btn-secondary" onclick="loadHistory()">🔄 Actualizează Istoricul</button>
-            </div>
-            <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem;">
-                Toate sesiunile de testare create vreodată, ordonate cronologic descrescător după dată.
-            </p>
-            <div id="history-loading" style="color: var(--text-secondary); text-align: center; padding: 2rem;">
-                Se încarcă istoricul sesiunilor...
-            </div>
-            <div id="history-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.25rem;"></div>
-        </section>
-    </main>
-
-    <!-- CREATE TEST MODAL -->
-    <div id="create-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 500; overflow-y: auto; padding: 2rem 1rem;">
-        <div class="card" style="max-width: 800px; margin: 0 auto; box-shadow: 0 20px 50px rgba(0,0,0,0.15);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h2 class="card-title">📝 Creează un Test Nou</h2>
-                <button onclick="closeCreateTestModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer;">✕</button>
-            </div>
-
-            <form id="create-test-form" onsubmit="handleCreateTest(event)">
-                <div class="form-group">
-                    <label class="form-label">Titlul Testului / Subiectul Lecției</label>
-                    <input type="text" id="test-title" class="form-input" placeholder="ex. Fizică Cuantică - Test Cursul 3" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Limită de Timp (Minute)</label>
-                    <input type="number" id="test-duration" class="form-input" min="1" max="180" value="5" required>
-                </div>
-
-                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
-
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h3 style="font-family: var(--font-heading); font-size: 1.2rem;">Întrebări (Selectează 1 din 4 opțiuni)</h3>
-                    <button type="button" class="btn btn-secondary" onclick="addQuestionField()">+ Adaugă Întrebare</button>
-                </div>
-
-                <div id="questions-container"></div>
-
-                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
-                    <button type="button" class="btn btn-secondary" onclick="closeCreateTestModal()">Anulează</button>
-                    <button type="submit" class="btn btn-primary">Salvează Testul</button>
-                </div>
-            </form>
-        </div>
+    <!-- Ambient Background Effects -->
+    <div class="bg-ambient">
+        <div class="ambient-circle-1"></div>
+        <div class="ambient-circle-2"></div>
     </div>
 
-    <!-- XML IMPORT MODAL -->
-    <div id="xml-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 500; overflow-y: auto; padding: 2rem 1rem;">
-        <div class="card" style="max-width: 750px; margin: 0 auto; box-shadow: 0 20px 50px rgba(0,0,0,0.15);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h2 class="card-title">📄 Importă Test din fișier XML</h2>
-                <button onclick="closeXmlImportModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer;">✕</button>
+    <div class="app-container">
+        <!-- Header / Branding -->
+        <header class="app-header">
+            <div class="brand-badge">
+                <span>🎓</span> Instrument pentru Școală & Clasă
+            </div>
+            <h1 class="brand-title">vio.zece.info</h1>
+            <p class="brand-desc">Lipește orice link (Google Forms, chestionar, document) și generează instant un cod QR mare și un link scurt pentru elevi.</p>
+        </header>
+
+        <!-- Main Workspace Card -->
+        <main class="main-card">
+            <!-- Mode Switcher Tabs -->
+            <div class="mode-tabs">
+                <button type="button" id="tab-teacher" class="tab-btn active" onclick="switchMode('teacher')">
+                    <span>👨‍🏫</span> Profesor (Creează QR)
+                </button>
+                <button type="button" id="tab-student" class="tab-btn" onclick="switchMode('student')">
+                    <span>📱</span> Elev (Introdu Cod)
+                </button>
             </div>
 
-            <div style="background: #f8fafc; border: 1px solid var(--border-color); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;">
-                <div style="font-weight: 700; color: var(--accent-blue); margin-bottom: 0.5rem;">Model XML de Exemplu:</div>
-                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">
-                    Puteți încărca teste dintr-un fișier XML structurat ca mai jos. Apăsați pe buton pentru a descărca fișierul model de exemplu:
-                </p>
-                <a href="sample_test.xml" download class="btn btn-secondary" style="font-size: 0.9rem; padding: 0.5rem 1rem; margin-bottom: 1rem;">
-                    📥 Descarcă Model XML Exemplu (`sample_test.xml`)
-                </a>
-                
-                <pre style="background: #0f172a; color: #38bdf8; padding: 1rem; border-radius: var(--radius-sm); font-size: 0.85rem; overflow-x: auto; max-height: 200px;">
-&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;test&gt;
-    &lt;title&gt;Titlul Testului Tău&lt;/title&gt;
-    &lt;duration_minutes&gt;5&lt;/duration_minutes&gt;
-    &lt;questions&gt;
-        &lt;question&gt;
-            &lt;text&gt;Textul întrebării tale?&lt;/text&gt;
-            &lt;option_a&gt;Varianta A&lt;/option_a&gt;
-            &lt;option_b&gt;Varianta B&lt;/option_b&gt;
-            &lt;option_c&gt;Varianta C&lt;/option_c&gt;
-            &lt;option_d&gt;Varianta D&lt;/option_d&gt;
-            &lt;correct_option&gt;B&lt;/correct_option&gt;
-        &lt;/question&gt;
-    &lt;/questions&gt;
-&lt;/test&gt;</pre>
-            </div>
-
-            <form id="xml-upload-form" onsubmit="handleXmlUpload(event)">
-                <div class="form-group">
-                    <label class="form-label">Varianta 1: Inserați textul XML direct mai jos:</label>
-                    <textarea id="xml-text-input" class="form-textarea" rows="6" placeholder="Lipiți (paste) codul XML aici..."></textarea>
-                </div>
-
-                <div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0; font-weight: 600;">— SAU —</div>
-
-                <div class="form-group">
-                    <label class="form-label">Varianta 2: Selectați fișierul XML de pe calculator:</label>
-                    <input type="file" id="xml-file-input" class="form-input" accept=".xml">
-                </div>
-
-                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
-                    <button type="button" class="btn btn-secondary" onclick="closeXmlImportModal()">Anulează</button>
-                    <button type="submit" class="btn btn-primary">🚀 Importă Testul Acum</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- BIG SCREEN PROJECTOR MODAL -->
-    <div id="big-screen-modal" class="big-screen-modal" style="display: none;">
-        <div class="big-screen-header">
-            <div>
-                <span class="brand-badge" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Sesiune Test în Direct</span>
-                <h1 id="big-screen-title" style="font-family: var(--font-heading); font-size: 2.2rem; margin-top: 0.5rem; color: var(--text-primary);">Test Lecție</h1>
-            </div>
-            <button class="btn btn-secondary" onclick="closeBigScreenModal()">Închide Modul Ecran Mare</button>
-        </div>
-
-        <div class="big-screen-content">
-            <div class="qr-box">
-                <div id="big-screen-qr"></div>
-                <div style="color: #0f172a; font-family: var(--font-heading); font-weight: 700; margin-top: 1rem; font-size: 1.1rem;">
-                    Scanează cu camera telefonului pentru a începe testul
-                </div>
-            </div>
-
-            <div style="display: flex; flex-direction: column; justify-content: center; gap: 1.5rem;">
-                <div>
-                    <div style="font-size: 1.1rem; color: var(--text-secondary); font-weight: 600;">Pasul 1: Scanează codul QR sau accesează:</div>
-                    <div class="big-join-url" id="big-screen-url">http://.../student.html</div>
-                </div>
-
-                <div>
-                    <div style="font-size: 1.1rem; color: var(--text-secondary); font-weight: 600;">Pasul 2: Introdu Codul de Sesiune:</div>
-                    <div class="big-session-code" id="big-screen-code">000000</div>
-                </div>
-
-                <div style="background: #f8fafc; border: 2px solid var(--border-color); padding: 1.5rem; border-radius: var(--radius-lg); margin-top: 1rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 1.2rem; font-weight: 700;">Studenți care au trimis:</span>
-                        <span id="big-screen-count" style="font-family: var(--font-heading); font-size: 2.5rem; font-weight: 800; color: var(--accent-green);">0</span>
+            <!-- TEACHER VIEW -->
+            <div id="teacher-view">
+                <div class="input-group-wrapper">
+                    <label for="url-input" class="input-label">Lipește link-ul formularului sau testului:</label>
+                    <div class="input-box-container" id="input-container">
+                        <span class="input-icon">🔗</span>
+                        <input 
+                            type="text" 
+                            id="url-input" 
+                            class="url-input" 
+                            placeholder="Lipește link-ul aici (ex: https://forms.gle/...)" 
+                            autocomplete="off" 
+                            spellcheck="false"
+                        >
+                        <div class="input-actions">
+                            <button type="button" id="btn-paste" class="action-icon-btn" title="Lipește din clipboard" onclick="pasteFromClipboard()">
+                                📋 Lipește
+                            </button>
+                            <button type="button" id="btn-clear" class="action-icon-btn" title="Șterge textul" onclick="clearInput()" style="display: none;">
+                                ✕ Șterge
+                            </button>
+                        </div>
                     </div>
+                    <div id="validation-msg" class="validation-message"></div>
                 </div>
+
+                <button type="button" id="btn-generate" class="btn-generate" onclick="handleGenerate()">
+                    <span>⚡ Generează QR & Cod Scurt</span>
+                </button>
+
+                <!-- RESULTS SECTION (Smoothly revealed upon generation) -->
+                <section id="results-section" class="results-container" style="display: none;">
+                    
+                    <!-- Short Link Box for Students -->
+                    <div class="short-link-badge-container">
+                        <div class="short-link-label">Cod Scurt pentru Elevi</div>
+                        <div class="short-link-url-display">
+                            <span id="domain-prefix">vio.zece.info/</span>
+                            <span id="short-code-badge" class="short-code-highlight">----</span>
+                        </div>
+                        <div class="short-link-actions">
+                            <button type="button" class="btn-secondary" onclick="copyShortLink()">
+                                📋 Copiază Link Scurt
+                            </button>
+                            <button type="button" class="btn-secondary" onclick="openDestinationUrl()">
+                                ↗️ Deschide Formular
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Scannable Big QR Code Frame -->
+                    <div class="qr-frame">
+                        <div id="qrcode-container"></div>
+                    </div>
+
+                    <p class="qr-instruction">
+                        <span>📷</span> Elevii pot scana acest cod direct cu camera telefonului
+                    </p>
+
+                    <!-- QR Actions (Projector Mode / Download) -->
+                    <div class="qr-actions">
+                        <button type="button" class="btn-projector" onclick="openProjectorMode()">
+                            🖥️ Mod Proiector (Ecran Mare)
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="downloadQrImage()">
+                            💾 Descarcă QR (PNG)
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="resetForm()">
+                            🔄 Alt Link
+                        </button>
+                    </div>
+
+                    <!-- Destination URL Info Pill -->
+                    <div class="destination-pill" id="dest-pill" title="">
+                        <span>Trimite către:</span>
+                        <a id="dest-link-anchor" href="#" target="_blank" rel="noopener noreferrer">...</a>
+                    </div>
+                </section>
             </div>
+
+            <!-- STUDENT DIRECT ENTRY VIEW -->
+            <div id="student-view" class="student-card-view" style="display: none;">
+                <h2 style="font-family: var(--font-heading); font-size: 1.5rem; margin-bottom: 0.5rem;">Intră la test sau formular</h2>
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">Introdu codul din 4 cifre sau litere afișat de profesor pe tablă/ecran:</p>
+
+                <div style="margin: 1.5rem 0;">
+                    <input 
+                        type="text" 
+                        id="student-code-input" 
+                        class="student-code-input" 
+                        placeholder="1234" 
+                        maxlength="6" 
+                        autocomplete="off" 
+                        spellcheck="false"
+                    >
+                    <div id="student-code-msg" class="validation-message" style="justify-content: center;"></div>
+                </div>
+
+                <button type="button" id="btn-student-submit" class="btn-generate" onclick="handleStudentSubmit()" style="max-width: 320px; margin: 0 auto;">
+                    <span>🚀 Deschide Formularul</span>
+                </button>
+            </div>
+        </main>
+
+        <!-- RECENT LINKS LIST (For Teacher's Convenience) -->
+        <section id="recent-section" class="recent-section" style="display: none;">
+            <div class="recent-title">
+                <span>🕒 Link-uri Generate Recent</span>
+                <button type="button" class="recent-clear-btn" onclick="clearRecentLinks()">Șterge Istoricul</button>
+            </div>
+            <div id="recent-list" class="recent-list"></div>
+        </section>
+    </div>
+
+    <!-- FULLSCREEN PROJECTOR VIEW (Classroom beamer mode) -->
+    <div id="projector-modal" class="projector-modal">
+        <button type="button" class="projector-close-btn" onclick="closeProjectorMode()">✕ Închide (ESC)</button>
+        
+        <div class="projector-header">
+            <div class="projector-domain">Accesează pe telefon: <span style="color: #60a5fa;">vio.zece.info/</span></div>
+            <div class="projector-code-badge" id="projector-code-text">----</div>
+        </div>
+
+        <div class="projector-qr-wrapper">
+            <div id="projector-qr-container"></div>
+        </div>
+
+        <div class="projector-footer">
+            sau scanează codul QR cu camera telefonului
         </div>
     </div>
 
+    <!-- Toast Notification -->
+    <div id="toast" class="toast-notice"></div>
+
+    <!-- Scripts -->
     <script src="js/qrcode.min.js"></script>
-    <script src="js/admin.js?v=3"></script>
+    <script src="js/app.js?v=3"></script>
 </body>
 </html>

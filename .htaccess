@@ -1,0 +1,12 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Do not rewrite existing files or directories
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Route short codes (e.g. vio.zece.info/1234 or /ABCD) to redirect.php
+    RewriteRule ^([a-zA-Z0-9_-]+)/?$ redirect.php?c=$1 [L,QSA]
+</IfModule>
