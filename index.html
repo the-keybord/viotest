@@ -3,182 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>vio.zece.info - Generează QR & Cod Rapid pentru Clasă</title>
-    <meta name="description" content="Partajează instant Google Forms, teste și link-uri în clasă: generează un cod QR mare și un link scurt de forma vio.zece.info/1234.">
-    
-    <!-- Open Graph for sharing -->
-    <meta property="og:title" content="vio.zece.info - Cod & QR Rapid">
-    <meta property="og:description" content="Partajare rapidă de link-uri și formulare pentru elevi.">
-    <meta property="og:type" content="website">
-
-    <link rel="stylesheet" href="css/styles.css?v=3">
+    <title>vio.zece.info - Partajare Formulare și Teste</title>
+    <meta name="description" content="Platformă rapidă pentru partajarea testelor și formularelor în clasă.">
+    <link rel="stylesheet" href="css/styles.css?v=4">
 </head>
-<body>
-    <!-- Ambient Background Effects -->
-    <div class="bg-ambient">
-        <div class="ambient-circle-1"></div>
-        <div class="ambient-circle-2"></div>
-    </div>
+<body class="app-layout">
 
-    <div class="app-container">
-        <!-- Header / Branding -->
-        <header class="app-header">
-            <div class="brand-badge">
-                <span>🎓</span> Instrument pentru Școală & Clasă
-            </div>
-            <h1 class="brand-title">vio.zece.info</h1>
-            <p class="brand-desc">Lipește orice link (Google Forms, chestionar, document) și generează instant un cod QR mare și un link scurt pentru elevi.</p>
-        </header>
+    <header class="header">
+        <div class="header-inner">
+            <a href="/" class="brand">
+                <svg class="brand-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                </svg>
+                vio.zece.info
+            </a>
+        </div>
+    </header>
 
-        <!-- Main Workspace Card -->
-        <main class="main-card">
-            <!-- Mode Switcher Tabs -->
-            <div class="mode-tabs">
-                <button type="button" id="tab-teacher" class="tab-btn active" onclick="switchMode('teacher')">
-                    <span>👨‍🏫</span> Profesor (Creează QR)
-                </button>
-                <button type="button" id="tab-student" class="tab-btn" onclick="switchMode('student')">
-                    <span>📱</span> Elev (Introdu Cod)
-                </button>
+    <main class="main-content">
+        <h1 class="page-title">Partajare Rapidă pentru Clasă</h1>
+        <p class="page-description">Lipește link-ul oricărui formular, test sau document pentru a genera instant un cod QR și un link scurt, ușor de accesat de către elevi.</p>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="tabs-container">
+                    <button class="tab-button active" id="tab-teacher" onclick="app.switchMode('teacher')">Profesor (Creează)</button>
+                    <button class="tab-button" id="tab-student" onclick="app.switchMode('student')">Elev (Introdu Cod)</button>
+                </div>
             </div>
 
-            <!-- TEACHER VIEW -->
-            <div id="teacher-view">
-                <div class="input-group-wrapper">
-                    <label for="url-input" class="input-label">Lipește link-ul formularului sau testului:</label>
-                    <div class="input-box-container" id="input-container">
-                        <span class="input-icon">🔗</span>
-                        <input 
-                            type="text" 
-                            id="url-input" 
-                            class="url-input" 
-                            placeholder="Lipește link-ul aici (ex: https://forms.gle/...)" 
-                            autocomplete="off" 
-                            spellcheck="false"
-                        >
-                        <div class="input-actions">
-                            <button type="button" id="btn-paste" class="action-icon-btn" title="Lipește din clipboard" onclick="pasteFromClipboard()">
-                                📋 Lipește
-                            </button>
-                            <button type="button" id="btn-clear" class="action-icon-btn" title="Șterge textul" onclick="clearInput()" style="display: none;">
-                                ✕ Șterge
-                            </button>
+            <div class="card-body">
+                <!-- TEACHER VIEW -->
+                <div id="view-teacher">
+                    <div class="form-group">
+                        <label for="url-input" class="form-label">Link-ul formularului (Google Forms, Quiz, etc.)</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon-left" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                            </svg>
+                            <input type="text" id="url-input" class="form-input has-icon" placeholder="https://forms.gle/..." autocomplete="off">
+                            <button class="input-action-right" id="btn-paste" onclick="app.pasteFromClipboard()">Lipește</button>
+                        </div>
+                        <div id="url-help" class="help-text">Introduceți adresa completă a testului.</div>
+                    </div>
+
+                    <button id="btn-generate" class="btn btn-primary btn-large" onclick="app.generateLink()">
+                        Generează Cod & QR
+                    </button>
+
+                    <!-- RESULTS PANEL -->
+                    <div id="results-panel" class="results-panel hidden">
+                        <div class="short-code-display">
+                            <div class="short-code-label">Link-ul pentru elevi</div>
+                            <div class="short-code-value">
+                                <span id="domain-prefix">vio.zece.info/</span>
+                                <span id="short-code-text">----</span>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                                <button class="btn btn-secondary" onclick="app.copyShortLink()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                    Copiază Link
+                                </button>
+                                <a id="btn-open-link" href="#" target="_blank" class="btn btn-secondary">
+                                    Deschide
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="qr-section">
+                            <div class="qr-container" id="qrcode-container"></div>
+                            <p class="help-text" style="margin-bottom: 1.25rem;">Afișează acest cod pe tablă pentru scanare rapidă.</p>
+                            <div class="qr-actions">
+                                <button class="btn btn-primary" onclick="app.openProjectorMode()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>
+                                    Mod Proiector
+                                </button>
+                                <button class="btn btn-secondary" onclick="app.resetForm()">Generează Alt Link</button>
+                            </div>
                         </div>
                     </div>
-                    <div id="validation-msg" class="validation-message"></div>
                 </div>
 
-                <button type="button" id="btn-generate" class="btn-generate" onclick="handleGenerate()">
-                    <span>⚡ Generează QR & Cod Scurt</span>
-                </button>
-
-                <!-- RESULTS SECTION (Smoothly revealed upon generation) -->
-                <section id="results-section" class="results-container" style="display: none;">
+                <!-- STUDENT VIEW -->
+                <div id="view-student" class="hidden student-input-container">
+                    <h2 style="margin-bottom: 0.5rem;">Intră la test</h2>
+                    <p class="help-text">Introdu codul primit de la profesor.</p>
                     
-                    <!-- Short Link Box for Students -->
-                    <div class="short-link-badge-container">
-                        <div class="short-link-label">Cod Scurt pentru Elevi</div>
-                        <div class="short-link-url-display">
-                            <span id="domain-prefix">vio.zece.info/</span>
-                            <span id="short-code-badge" class="short-code-highlight">----</span>
-                        </div>
-                        <div class="short-link-actions">
-                            <button type="button" class="btn-secondary" onclick="copyShortLink()">
-                                📋 Copiază Link Scurt
-                            </button>
-                            <button type="button" class="btn-secondary" onclick="openDestinationUrl()">
-                                ↗️ Deschide Formular
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Scannable Big QR Code Frame -->
-                    <div class="qr-frame">
-                        <div id="qrcode-container"></div>
-                    </div>
-
-                    <p class="qr-instruction">
-                        <span>📷</span> Elevii pot scana acest cod direct cu camera telefonului
-                    </p>
-
-                    <!-- QR Actions (Projector Mode / Download) -->
-                    <div class="qr-actions">
-                        <button type="button" class="btn-projector" onclick="openProjectorMode()">
-                            🖥️ Mod Proiector (Ecran Mare)
-                        </button>
-                        <button type="button" class="btn-secondary" onclick="downloadQrImage()">
-                            💾 Descarcă QR (PNG)
-                        </button>
-                        <button type="button" class="btn-secondary" onclick="resetForm()">
-                            🔄 Alt Link
-                        </button>
-                    </div>
-
-                    <!-- Destination URL Info Pill -->
-                    <div class="destination-pill" id="dest-pill" title="">
-                        <span>Trimite către:</span>
-                        <a id="dest-link-anchor" href="#" target="_blank" rel="noopener noreferrer">...</a>
-                    </div>
-                </section>
-            </div>
-
-            <!-- STUDENT DIRECT ENTRY VIEW -->
-            <div id="student-view" class="student-card-view" style="display: none;">
-                <h2 style="font-family: var(--font-heading); font-size: 1.5rem; margin-bottom: 0.5rem;">Intră la test sau formular</h2>
-                <p style="color: var(--text-secondary); font-size: 0.95rem;">Introdu codul din 4 cifre sau litere afișat de profesor pe tablă/ecran:</p>
-
-                <div style="margin: 1.5rem 0;">
-                    <input 
-                        type="text" 
-                        id="student-code-input" 
-                        class="student-code-input" 
-                        placeholder="1234" 
-                        maxlength="6" 
-                        autocomplete="off" 
-                        spellcheck="false"
-                    >
-                    <div id="student-code-msg" class="validation-message" style="justify-content: center;"></div>
+                    <input type="text" id="student-code-input" class="student-code-input" placeholder="1234" maxlength="6" autocomplete="off">
+                    <div id="student-help" class="help-text" style="margin-bottom: 1.5rem;">Așteaptă introducerea completă...</div>
+                    
+                    <button id="btn-student-submit" class="btn btn-primary btn-large" onclick="app.studentSubmit()">
+                        Accesează Formularul
+                    </button>
                 </div>
 
-                <button type="button" id="btn-student-submit" class="btn-generate" onclick="handleStudentSubmit()" style="max-width: 320px; margin: 0 auto;">
-                    <span>🚀 Deschide Formularul</span>
-                </button>
             </div>
-        </main>
+        </div>
+    </main>
 
-        <!-- RECENT LINKS LIST (For Teacher's Convenience) -->
-        <section id="recent-section" class="recent-section" style="display: none;">
-            <div class="recent-title">
-                <span>🕒 Link-uri Generate Recent</span>
-                <button type="button" class="recent-clear-btn" onclick="clearRecentLinks()">Șterge Istoricul</button>
-            </div>
-            <div id="recent-list" class="recent-list"></div>
-        </section>
+    <!-- PROJECTOR MODAL -->
+    <div id="projector-modal" class="modal-overlay">
+        <button class="modal-close" onclick="app.closeProjectorMode()">✕ Închide (ESC)</button>
+        <div class="projector-domain"><span>Accesați: </span><span id="proj-domain">vio.zece.info/</span></div>
+        <div class="projector-code" id="proj-code">----</div>
+        <div class="projector-qr-container" id="proj-qr"></div>
     </div>
 
-    <!-- FULLSCREEN PROJECTOR VIEW (Classroom beamer mode) -->
-    <div id="projector-modal" class="projector-modal">
-        <button type="button" class="projector-close-btn" onclick="closeProjectorMode()">✕ Închide (ESC)</button>
-        
-        <div class="projector-header">
-            <div class="projector-domain">Accesează pe telefon: <span style="color: #60a5fa;">vio.zece.info/</span></div>
-            <div class="projector-code-badge" id="projector-code-text">----</div>
-        </div>
+    <div id="toast" class="toast"></div>
 
-        <div class="projector-qr-wrapper">
-            <div id="projector-qr-container"></div>
-        </div>
-
-        <div class="projector-footer">
-            sau scanează codul QR cu camera telefonului
-        </div>
-    </div>
-
-    <!-- Toast Notification -->
-    <div id="toast" class="toast-notice"></div>
-
-    <!-- Scripts -->
     <script src="js/qrcode.min.js"></script>
-    <script src="js/app.js?v=3"></script>
+    <script src="js/app.js?v=4"></script>
 </body>
 </html>

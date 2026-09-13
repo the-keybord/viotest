@@ -1,7 +1,11 @@
 <?php
+/**
+ * vio.zece.info - Short URL Redirect
+ * Uses FileDB for fast, robust routing and analytics.
+ */
+
 $code = isset($_GET['c']) ? trim($_GET['c']) : (isset($_GET['code']) ? trim($_GET['code']) : '');
 
-// If code was not in query string, inspect PATH_INFO or REQUEST_URI
 if (!$code && !empty($_SERVER['REQUEST_URI'])) {
     $uriPath = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
     $parts = explode('/', $uriPath);
@@ -16,44 +20,20 @@ if (!$code) {
     exit();
 }
 
-$dataDir = __DIR__ . '/data';
-$linksFile = $dataDir . '/links.json';
+require_once __DIR__ . '/api/db.php';
+global $db;
 
 $targetUrl = null;
 
-if (file_exists($linksFile)) {
-    $fp = fopen($linksFile, 'r+');
-    if ($fp) {
-        flock($fp, LOCK_EX);
-        $content = stream_get_contents($fp);
-        $data = json_decode($content, true);
-        if (is_array($data) && isset($data['codes'])) {
-            $matchedKey = null;
-            if (isset($data['codes'][$code])) {
-                $matchedKey = $code;
-            } else {
-                foreach ($data['codes'] as $k => $item) {
-                    if (strcasecmp($k, $code) === 0) {
-                        $matchedKey = $k;
-                        break;
-                    }
-                }
-            }
-
-            if ($matchedKey) {
-                $targetUrl = $data['codes'][$matchedKey]['url'];
-                $data['codes'][$matchedKey]['clicks'] = ($data['codes'][$matchedKey]['clicks'] ?? 0) + 1;
-                $data['codes'][$matchedKey]['last_click'] = date('c');
-
-                rewind($fp);
-                ftruncate($fp, 0);
-                fwrite($fp, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-                fflush($fp);
-            }
-        }
-        flock($fp, LOCK_UN);
-        fclose($fp);
+try {
+    $link = $db->getLinkByCode($code);
+    if ($link) {
+        $targetUrl = $link['target_url'];
+        // Increment click count safely using flock
+        $db->incrementClick($code);
     }
+} catch (Exception $e) {
+    error_log("Redirect Error: " . $e->getMessage());
 }
 
 if ($targetUrl) {
@@ -67,22 +47,22 @@ if ($targetUrl) {
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="refresh" content="0;url=<?= htmlspecialchars($targetUrl) ?>">
-    <title>Redirecționare către formular...</title>
+    <title>Redirecționare...</title>
     <script>window.location.replace(<?= json_encode($targetUrl) ?>);</script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
-        .box { background: #1e293b; padding: 2.5rem; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); max-width: 420px; }
-        .spinner { width: 44px; height: 44px; border: 4px solid #334155; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1.5rem; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #fafafa; color: #333; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+        .box { background: #fff; padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eaeaea; }
+        .spinner { width: 32px; height: 32px; border: 3px solid #f3f3f3; border-top-color: #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1.5rem; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        a { color: #60a5fa; text-decoration: none; font-weight: 600; }
+        a { color: #2563eb; text-decoration: none; font-weight: 500; }
+        a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
     <div class="box">
         <div class="spinner"></div>
-        <h2 style="margin: 0 0 0.5rem;">Se deschide link-ul...</h2>
-        <p style="color: #94a3b8; font-size: 0.95rem; margin-bottom: 1.25rem;">Dacă nu ești redirecționat automat în câteva secunde:</p>
-        <a href="<?= htmlspecialchars($targetUrl) ?>">Apasă aici pentru a continua</a>
+        <h2 style="margin: 0 0 0.5rem; font-size: 1.25rem;">Se deschide...</h2>
+        <a href="<?= htmlspecialchars($targetUrl) ?>">Apasă aici dacă redirecționarea nu funcționează automat</a>
     </div>
 </body>
 </html>
@@ -95,25 +75,25 @@ if ($targetUrl) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cod Negăsit - vio.zece.info</title>
+    <title>Link Negăsit - vio.zece.info</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 1rem; }
-        .card { background: #1e293b; padding: 2.5rem; border-radius: 20px; border: 1px solid #334155; max-width: 450px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
-        .badge { display: inline-block; background: #ef444422; color: #ef4444; border: 1px solid #ef444455; padding: 0.4rem 1rem; border-radius: 999px; font-weight: 700; font-size: 0.9rem; margin-bottom: 1rem; }
-        h1 { margin: 0 0 1rem; font-size: 1.75rem; }
-        p { color: #94a3b8; line-height: 1.6; margin-bottom: 2rem; }
-        .code-display { font-family: monospace; font-size: 2rem; font-weight: 800; color: #f59e0b; background: #0f172a; padding: 0.5rem 1.5rem; border-radius: 12px; display: inline-block; margin-bottom: 1.5rem; letter-spacing: 2px; }
-        .btn { display: inline-block; background: #3b82f6; color: white; text-decoration: none; padding: 0.85rem 1.75rem; border-radius: 12px; font-weight: 600; transition: all 0.2s ease; }
-        .btn:hover { background: #2563eb; transform: translateY(-2px); }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f9fafb; color: #111827; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 1rem; }
+        .card { background: #ffffff; padding: 3rem 2rem; border-radius: 16px; text-align: center; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.01); border: 1px solid #f3f4f6; max-width: 420px; width: 100%; }
+        .icon { font-size: 3rem; margin-bottom: 1rem; color: #ef4444; }
+        h1 { margin: 0 0 0.5rem; font-size: 1.5rem; font-weight: 700; }
+        p { color: #6b7280; line-height: 1.5; margin-bottom: 2rem; font-size: 1rem; }
+        .code-display { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 1.25rem; font-weight: 700; color: #4b5563; background: #f3f4f6; padding: 0.5rem 1rem; border-radius: 8px; display: inline-block; margin-bottom: 1.5rem; letter-spacing: 2px; }
+        .btn { display: inline-block; background: #2563eb; color: white; text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 500; transition: background-color 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .btn:hover { background: #1d4ed8; }
     </style>
 </head>
 <body>
     <div class="card">
-        <span class="badge">Cod Inexistent</span>
-        <h1>Link negăsit</h1>
+        <div class="icon">⚠️</div>
+        <h1>Link-ul nu există</h1>
         <div class="code-display"><?= htmlspecialchars($code) ?></div>
-        <p>Codul pe care l-ai introdus nu există sau a expirat. Te rugăm să verifici codul primit de la profesor.</p>
-        <a href="index.html" class="btn">Înapoi la vio.zece.info</a>
+        <p>Codul pe care l-ai introdus nu a fost găsit. Te rugăm să verifici dacă l-ai scris corect.</p>
+        <a href="index.html" class="btn">Întoarce-te la pagina principală</a>
     </div>
 </body>
 </html>

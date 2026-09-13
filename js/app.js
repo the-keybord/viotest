@@ -1,555 +1,328 @@
 /**
- * vio.zece.info - Application Logic
- * Fast URL validation, big QR code generator, short code sharing, and projector mode.
+ * vio.zece.info - Solid Frontend Architecture
+ * Object-oriented JS for maintainability, stability, and clean state management.
  */
 
-let currentCode = '';
-let currentShortUrl = '';
-let currentTargetUrl = '';
-let qrInstance = null;
-let projectorQrInstance = null;
+class VioApp {
+    constructor() {
+        this.state = {
+            mode: 'teacher', // 'teacher' | 'student'
+            currentCode: null,
+            currentShortUrl: null,
+            currentTargetUrl: null,
+            qrInstance: null,
+            projectorQrInstance: null
+        };
 
-const STORAGE_KEY = 'vio_zece_recent_links';
+        this.elements = {
+            // Tabs
+            tabTeacher: document.getElementById('tab-teacher'),
+            tabStudent: document.getElementById('tab-student'),
+            viewTeacher: document.getElementById('view-teacher'),
+            viewStudent: document.getElementById('view-student'),
+            
+            // Teacher Form
+            urlInput: document.getElementById('url-input'),
+            urlHelp: document.getElementById('url-help'),
+            btnGenerate: document.getElementById('btn-generate'),
+            
+            // Results
+            resultsPanel: document.getElementById('results-panel'),
+            shortCodeText: document.getElementById('short-code-text'),
+            domainPrefix: document.getElementById('domain-prefix'),
+            btnOpenLink: document.getElementById('btn-open-link'),
+            qrContainer: document.getElementById('qrcode-container'),
+            
+            // Student Form
+            studentInput: document.getElementById('student-code-input'),
+            studentHelp: document.getElementById('student-help'),
+            btnStudentSubmit: document.getElementById('btn-student-submit'),
+            
+            // Projector
+            modal: document.getElementById('projector-modal'),
+            projDomain: document.getElementById('proj-domain'),
+            projCode: document.getElementById('proj-code'),
+            projQr: document.getElementById('proj-qr'),
+            
+            // Toast
+            toast: document.getElementById('toast')
+        };
 
-document.addEventListener('DOMContentLoaded', () => {
-    initApp();
-});
-
-function initApp() {
-    const urlInput = document.getElementById('url-input');
-    const studentInput = document.getElementById('student-code-input');
-
-    // Auto-clean & validate on input
-    if (urlInput) {
-        urlInput.addEventListener('input', () => {
-            toggleClearBtn();
-            const val = urlInput.value.trim();
-            if (val.length > 8) {
-                validateUrlLive(val);
-            } else {
-                clearValidationMsg();
-            }
-        });
-
-        urlInput.addEventListener('paste', (e) => {
-            setTimeout(() => {
-                toggleClearBtn();
-                const pasted = urlInput.value.trim();
-                if (validateUrlLive(pasted)) {
-                    handleGenerate();
-                }
-            }, 50);
-        });
-
-        urlInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                handleGenerate();
-            }
-        });
+        this.initEventListeners();
+        this.checkUrlParams();
     }
 
-    // Student input handling
-    if (studentInput) {
-        studentInput.addEventListener('input', () => {
-            const val = studentInput.value.trim().toUpperCase();
-            studentInput.value = val;
+    initEventListeners() {
+        // Real-time URL validation
+        this.elements.urlInput.addEventListener('input', () => {
+            this.validateUrl(this.elements.urlInput.value);
+        });
+
+        this.elements.urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.generateLink();
+        });
+
+        // Real-time Student Code validation
+        this.elements.studentInput.addEventListener('input', (e) => {
+            const val = e.target.value.toUpperCase();
+            e.target.value = val;
             if (val.length >= 4) {
-                // Auto submit when 4 or more digits typed
-                handleStudentSubmit();
+                this.studentSubmit();
+            } else {
+                this.setHelp('studentHelp', 'Așteaptă introducerea completă...', '');
             }
         });
 
-        studentInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                handleStudentSubmit();
-            }
+        this.elements.studentInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.studentSubmit();
+        });
+
+        // Global ESC key for projector modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') this.closeProjectorMode();
         });
     }
 
-    // Keyboard shortcuts: ESC closes projector
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            closeProjectorMode();
+    checkUrlParams() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('c') || urlParams.get('code');
+        if (code) {
+            window.location.href = `redirect.php?c=${encodeURIComponent(code)}`;
         }
-    });
-
-    // Check if URL has ?code= or ?c= parameter in query string
-    const urlParams = new URLSearchParams(window.location.search);
-    const codeParam = urlParams.get('c') || urlParams.get('code');
-    if (codeParam) {
-        resolveAndRedirectCode(codeParam);
     }
 
-    loadRecentLinks();
-}
-
-/**
- * Toggle between Teacher and Student modes
- */
-function switchMode(mode) {
-    const tabTeacher = document.getElementById('tab-teacher');
-    const tabStudent = document.getElementById('tab-student');
-    const teacherView = document.getElementById('teacher-view');
-    const studentView = document.getElementById('student-view');
-
-    if (mode === 'teacher') {
-        tabTeacher.classList.add('active');
-        tabStudent.classList.remove('active');
-        teacherView.style.display = 'block';
-        studentView.style.display = 'none';
-        document.getElementById('url-input').focus();
-    } else {
-        tabTeacher.classList.remove('active');
-        tabStudent.classList.add('active');
-        teacherView.style.display = 'none';
-        studentView.style.display = 'block';
-        document.getElementById('student-code-input').focus();
-    }
-}
-
-/**
- * Live URL validation helper
- */
-function validateUrlLive(inputUrl) {
-    const msgEl = document.getElementById('validation-msg');
-    const container = document.getElementById('input-container');
-
-    const normalized = normalizeUrlString(inputUrl);
-    if (!normalized.isValid) {
-        container.classList.add('has-error');
-        msgEl.className = 'validation-message error';
-        msgEl.innerHTML = '⚠️ Te rugăm să introduci un URL valid (ex: https://forms.gle/...)';
-        return false;
-    }
-
-    container.classList.remove('has-error');
-    msgEl.className = 'validation-message success';
-    msgEl.innerHTML = '✓ Adresă web validă gata de generat';
-    return true;
-}
-
-function clearValidationMsg() {
-    const msgEl = document.getElementById('validation-msg');
-    const container = document.getElementById('input-container');
-    container.classList.remove('has-error');
-    msgEl.textContent = '';
-    msgEl.className = 'validation-message';
-}
-
-function normalizeUrlString(str) {
-    let url = (str || '').trim();
-    if (!url) return { isValid: false, url: '' };
-
-    // Auto prepend https if missing protocol
-    if (!/^https?:\/\//i.test(url)) {
-        url = 'https://' + url;
-    }
-
-    try {
-        const parsed = new URL(url);
-        const hasValidHost = parsed.hostname && parsed.hostname.includes('.');
-        return { isValid: hasValidHost, url: url };
-    } catch (e) {
-        return { isValid: false, url: '' };
-    }
-}
-
-/**
- * Handle Paste button
- */
-async function pasteFromClipboard() {
-    try {
-        const text = await navigator.clipboard.readText();
-        if (text) {
-            const input = document.getElementById('url-input');
-            input.value = text.trim();
-            toggleClearBtn();
-            if (validateUrlLive(input.value)) {
-                handleGenerate();
-            }
+    switchMode(mode) {
+        this.state.mode = mode;
+        if (mode === 'teacher') {
+            this.elements.tabTeacher.classList.add('active');
+            this.elements.tabStudent.classList.remove('active');
+            this.elements.viewTeacher.classList.remove('hidden');
+            this.elements.viewStudent.classList.add('hidden');
+            this.elements.urlInput.focus();
+        } else {
+            this.elements.tabTeacher.classList.remove('active');
+            this.elements.tabStudent.classList.add('active');
+            this.elements.viewTeacher.classList.add('hidden');
+            this.elements.viewStudent.classList.remove('hidden');
+            this.elements.studentInput.focus();
         }
-    } catch (err) {
-        showToast('Apasă Ctrl+V pentru a lipi link-ul.');
-        document.getElementById('url-input').focus();
-    }
-}
-
-function clearInput() {
-    const input = document.getElementById('url-input');
-    input.value = '';
-    toggleClearBtn();
-    clearValidationMsg();
-    input.focus();
-}
-
-function toggleClearBtn() {
-    const input = document.getElementById('url-input');
-    const btnClear = document.getElementById('btn-clear');
-    btnClear.style.display = input.value.trim().length > 0 ? 'inline-flex' : 'none';
-}
-
-/**
- * Main action: Generate QR & Short Code
- */
-async function handleGenerate() {
-    const input = document.getElementById('url-input');
-    const rawUrl = input.value.trim();
-
-    const normalized = normalizeUrlString(rawUrl);
-    if (!normalized.isValid) {
-        validateUrlLive(rawUrl);
-        input.focus();
-        return;
     }
 
-    const targetUrl = normalized.url;
-    const btnGen = document.getElementById('btn-generate');
-    btnGen.disabled = true;
-    btnGen.innerHTML = '<span>⏳ Se generează codul...</span>';
+    setHelp(elementName, message, type = '') {
+        const el = this.elements[elementName];
+        el.textContent = message;
+        el.className = `help-text ${type}`;
+    }
 
-    try {
-        let code = '';
-        let shortUrl = '';
-
-        // Call backend API
+    normalizeUrl(str) {
+        let url = (str || '').trim();
+        if (!url) return null;
+        if (!/^https?:\/\//i.test(url)) {
+            url = 'https://' + url;
+        }
         try {
-            const res = await fetch('api/links.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: targetUrl })
-            });
+            const parsed = new URL(url);
+            if (parsed.hostname && parsed.hostname.includes('.')) {
+                return url;
+            }
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
 
-            if (res.ok) {
-                const data = await res.json();
-                if (data.success) {
-                    code = data.code;
-                    shortUrl = data.short_url;
+    validateUrl(input) {
+        if (!input.trim()) {
+            this.setHelp('urlHelp', 'Introduceți adresa completă a testului.');
+            return false;
+        }
+        const validUrl = this.normalizeUrl(input);
+        if (validUrl) {
+            this.setHelp('urlHelp', 'Adresă web validă.', 'success');
+            return true;
+        } else {
+            this.setHelp('urlHelp', 'Format URL invalid. Verificați link-ul introdus.', 'error');
+            return false;
+        }
+    }
+
+    async pasteFromClipboard() {
+        try {
+            const text = await navigator.clipboard.readText();
+            if (text) {
+                this.elements.urlInput.value = text.trim();
+                if (this.validateUrl(text)) {
+                    this.generateLink();
                 }
             }
-        } catch (apiErr) {
-            console.warn('API call fallback to client code generator:', apiErr);
+        } catch (err) {
+            this.showToast('Nu s-a putut lipi automat. Folosiți Ctrl+V.');
+            this.elements.urlInput.focus();
         }
-
-        // Client-side fallback if server API is unavailable
-        if (!code) {
-            code = Math.floor(1000 + Math.random() * 9000).toString();
-            const host = window.location.host || 'vio.zece.info';
-            shortUrl = `${window.location.protocol}//${host}/${code}`;
-        }
-
-        currentCode = code;
-        currentShortUrl = shortUrl;
-        currentTargetUrl = targetUrl;
-
-        // Display results
-        renderResults(code, shortUrl, targetUrl);
-
-        // Save in recent links
-        saveToRecent(code, shortUrl, targetUrl);
-
-        showToast('✨ Codul QR și link-ul au fost generate!');
-    } catch (err) {
-        console.error('Error generating link:', err);
-        showToast('A apărut o eroare la generare.');
-    } finally {
-        btnGen.disabled = false;
-        btnGen.innerHTML = '<span>⚡ Generează QR & Cod Scurt</span>';
-    }
-}
-
-/**
- * Render the QR Code and Short Link in the UI
- */
-function renderResults(code, shortUrl, targetUrl) {
-    const resultsSection = document.getElementById('results-section');
-    const shortCodeBadge = document.getElementById('short-code-badge');
-    const domainPrefix = document.getElementById('domain-prefix');
-    const destPill = document.getElementById('dest-pill');
-    const destAnchor = document.getElementById('dest-link-anchor');
-    const qrContainer = document.getElementById('qrcode-container');
-
-    // Set short link display
-    const hostName = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || !window.location.hostname)
-        ? 'vio.zece.info'
-        : (window.location.host || 'vio.zece.info');
-    domainPrefix.textContent = hostName + '/';
-    shortCodeBadge.textContent = code;
-
-    // Set destination preview
-    destAnchor.href = targetUrl;
-    destAnchor.textContent = targetUrl.length > 55 ? targetUrl.substring(0, 52) + '...' : targetUrl;
-    destPill.title = targetUrl;
-
-    // Render Big Scannable QR Code
-    // Note: We encode the short link or direct link. Encoding the short link (vio.zece.info/1234)
-    // creates a lower-density, much larger-pixel QR code that is remarkably easy to scan across a classroom!
-    qrContainer.innerHTML = '';
-    
-    // Size: 320x320 for high visibility
-    qrInstance = new QRCode(qrContainer, {
-        text: shortUrl,
-        width: 320,
-        height: 320,
-        colorDark: '#0b0f19',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.H
-    });
-
-    resultsSection.style.display = 'flex';
-    resultsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-/**
- * Copy the short link to clipboard
- */
-async function copyShortLink() {
-    if (!currentShortUrl) return;
-    try {
-        await navigator.clipboard.writeText(currentShortUrl);
-        showToast('📋 Link-ul scurt a fost copiat în clipboard!');
-    } catch (err) {
-        // Fallback
-        const temp = document.createElement('input');
-        temp.value = currentShortUrl;
-        document.body.appendChild(temp);
-        temp.select();
-        document.execCommand('copy');
-        document.body.removeChild(temp);
-        showToast('📋 Link-ul scurt a fost copiat!');
-    }
-}
-
-/**
- * Open destination URL in a new tab
- */
-function openDestinationUrl() {
-    if (currentTargetUrl) {
-        window.open(currentTargetUrl, '_blank', 'noopener,noreferrer');
-    }
-}
-
-/**
- * Download generated QR Code image
- */
-function downloadQrImage() {
-    const qrContainer = document.getElementById('qrcode-container');
-    const img = qrContainer.querySelector('img');
-    const canvas = qrContainer.querySelector('canvas');
-
-    let dataUrl = '';
-    if (canvas) {
-        dataUrl = canvas.toDataURL('image/png');
-    } else if (img && img.src) {
-        dataUrl = img.src;
     }
 
-    if (!dataUrl) {
-        showToast('Nu s-a putut descărca imaginea.');
-        return;
-    }
+    async generateLink() {
+        const rawUrl = this.elements.urlInput.value;
+        const validUrl = this.normalizeUrl(rawUrl);
 
-    const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = `vio-zece-qr-${currentCode || 'code'}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    showToast('💾 Imaginea QR a fost descărcată.');
-}
-
-/**
- * Reset form for a new link
- */
-function resetForm() {
-    const input = document.getElementById('url-input');
-    input.value = '';
-    toggleClearBtn();
-    clearValidationMsg();
-    document.getElementById('results-section').style.display = 'none';
-    input.focus();
-}
-
-/**
- * Projector / Fullscreen Mode
- */
-function openProjectorMode() {
-    if (!currentCode) return;
-
-    const modal = document.getElementById('projector-modal');
-    const codeText = document.getElementById('projector-code-text');
-    const projContainer = document.getElementById('projector-qr-container');
-
-    codeText.textContent = currentCode;
-    projContainer.innerHTML = '';
-
-    // Create huge QR code for classroom projector (450px)
-    projectorQrInstance = new QRCode(projContainer, {
-        text: currentShortUrl,
-        width: 440,
-        height: 440,
-        colorDark: '#000000',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.H
-    });
-
-    modal.classList.add('active');
-
-    // Attempt native browser fullscreen if supported
-    if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(() => {});
-    }
-}
-
-function closeProjectorMode() {
-    const modal = document.getElementById('projector-modal');
-    modal.classList.remove('active');
-    if (document.fullscreenElement && document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {});
-    }
-}
-
-/**
- * Student quick join: verify code and redirect
- */
-async function handleStudentSubmit() {
-    const input = document.getElementById('student-code-input');
-    const msgEl = document.getElementById('student-code-msg');
-    const btn = document.getElementById('btn-student-submit');
-    const code = input.value.trim().toUpperCase();
-
-    if (!code || code.length < 3) {
-        msgEl.className = 'validation-message error';
-        msgEl.textContent = 'Te rugăm să introduci codul complet primit de la profesor.';
-        input.focus();
-        return;
-    }
-
-    btn.disabled = true;
-    btn.innerHTML = '<span>⏳ Se verifică codul...</span>';
-    msgEl.textContent = '';
-
-    try {
-        const res = await fetch(`api/links.php?code=${encodeURIComponent(code)}`);
-        const data = await res.json();
-
-        if (res.ok && data.success && data.target_url) {
-            msgEl.className = 'validation-message success';
-            msgEl.textContent = '✓ Cod valid! Se deschide formularul...';
-            setTimeout(() => {
-                window.location.href = data.target_url;
-            }, 400);
-        } else {
-            msgEl.className = 'validation-message error';
-            msgEl.textContent = '❌ Codul nu a fost găsit. Te rugăm să verifici codul cu profesorul.';
-            btn.disabled = false;
-            btn.innerHTML = '<span>🚀 Deschide Formularul</span>';
-        }
-    } catch (err) {
-        // Direct redirect attempt via server rewrite
-        window.location.href = `redirect.php?c=${encodeURIComponent(code)}`;
-    }
-}
-
-async function resolveAndRedirectCode(code) {
-    window.location.href = `redirect.php?c=${encodeURIComponent(code)}`;
-}
-
-/**
- * LocalStorage Recent Links Management
- */
-function saveToRecent(code, shortUrl, targetUrl) {
-    try {
-        let recents = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        // Deduplicate
-        recents = recents.filter(item => item.code !== code && item.targetUrl !== targetUrl);
-        recents.unshift({
-            code: code,
-            shortUrl: shortUrl,
-            targetUrl: targetUrl,
-            timestamp: new Date().toISOString()
-        });
-        // Keep max 8 items
-        recents = recents.slice(0, 8);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(recents));
-        loadRecentLinks();
-    } catch (e) {
-        console.warn('LocalStorage unavailable');
-    }
-}
-
-function loadRecentLinks() {
-    const container = document.getElementById('recent-section');
-    const list = document.getElementById('recent-list');
-    if (!container || !list) return;
-
-    try {
-        const recents = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        if (recents.length === 0) {
-            container.style.display = 'none';
+        if (!validUrl) {
+            this.validateUrl(rawUrl);
+            this.elements.urlInput.focus();
             return;
         }
 
-        list.innerHTML = '';
-        recents.forEach(item => {
-            const el = document.createElement('div');
-            el.className = 'recent-item';
-            el.innerHTML = `
-                <div>
-                    <div class="recent-code">${escapeHtml(item.code)}</div>
-                    <div class="recent-url">${escapeHtml(item.targetUrl)}</div>
-                </div>
-                <div style="font-size: 0.85rem; color: #818cf8; font-weight: 600;">Afișează QR ↗</div>
-            `;
-            el.addEventListener('click', () => {
-                currentCode = item.code;
-                currentShortUrl = item.shortUrl;
-                currentTargetUrl = item.targetUrl;
-                document.getElementById('url-input').value = item.targetUrl;
-                toggleClearBtn();
-                renderResults(item.code, item.shortUrl, item.targetUrl);
+        this.elements.btnGenerate.disabled = true;
+        this.elements.btnGenerate.textContent = 'Se procesează...';
+
+        try {
+            const response = await fetch('api/links.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: validUrl })
             });
-            list.appendChild(el);
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                this.state.currentCode = data.code;
+                this.state.currentShortUrl = data.short_url;
+                this.state.currentTargetUrl = data.target_url;
+                this.renderResults();
+                this.showToast('Link creat cu succes!');
+            } else {
+                throw new Error(data.error || 'Eroare la generare.');
+            }
+        } catch (error) {
+            console.error('API Error:', error);
+            this.setHelp('urlHelp', error.message, 'error');
+        } finally {
+            this.elements.btnGenerate.disabled = false;
+            this.elements.btnGenerate.textContent = 'Generează Cod & QR';
+        }
+    }
+
+    renderResults() {
+        this.elements.resultsPanel.classList.remove('hidden');
+        
+        // Setup text
+        const host = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || !window.location.hostname
+            ? 'vio.zece.info' : window.location.host;
+            
+        this.elements.domainPrefix.textContent = host + '/';
+        this.elements.shortCodeText.textContent = this.state.currentCode;
+        
+        this.elements.btnOpenLink.href = this.state.currentTargetUrl;
+
+        // Generate Standard QR
+        this.elements.qrContainer.innerHTML = '';
+        this.state.qrInstance = new QRCode(this.elements.qrContainer, {
+            text: this.state.currentShortUrl,
+            width: 280,
+            height: 280,
+            colorDark: '#111827',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
         });
 
-        container.style.display = 'block';
-    } catch (e) {
-        container.style.display = 'none';
+        // Scroll to results
+        this.elements.resultsPanel.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    resetForm() {
+        this.elements.urlInput.value = '';
+        this.setHelp('urlHelp', 'Introduceți adresa completă a testului.');
+        this.elements.resultsPanel.classList.add('hidden');
+        this.state.currentCode = null;
+        this.elements.urlInput.focus();
+    }
+
+    async copyShortLink() {
+        if (!this.state.currentShortUrl) return;
+        try {
+            await navigator.clipboard.writeText(this.state.currentShortUrl);
+            this.showToast('Link copiat în clipboard!');
+        } catch (err) {
+            // Fallback for older browsers
+            const textArea = document.createElement("textarea");
+            textArea.value = this.state.currentShortUrl;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand("Copy");
+            textArea.remove();
+            this.showToast('Link copiat!');
+        }
+    }
+
+    openProjectorMode() {
+        if (!this.state.currentCode) return;
+        
+        const host = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || !window.location.hostname
+            ? 'vio.zece.info' : window.location.host;
+
+        this.elements.projDomain.textContent = host + '/';
+        this.elements.projCode.textContent = this.state.currentCode;
+        
+        this.elements.projQr.innerHTML = '';
+        this.state.projectorQrInstance = new QRCode(this.elements.projQr, {
+            text: this.state.currentShortUrl,
+            width: 500,
+            height: 500,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        this.elements.modal.classList.add('active');
+        
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(e => console.log('Fullscreen rejected.'));
+        }
+    }
+
+    closeProjectorMode() {
+        this.elements.modal.classList.remove('active');
+        if (document.fullscreenElement && document.exitFullscreen) {
+            document.exitFullscreen().catch(e => {});
+        }
+    }
+
+    async studentSubmit() {
+        const code = this.elements.studentInput.value.trim().toUpperCase();
+        if (code.length < 3) return;
+
+        this.elements.btnStudentSubmit.disabled = true;
+        this.elements.btnStudentSubmit.textContent = 'Se verifică...';
+        this.setHelp('studentHelp', 'Se verifică codul...');
+
+        try {
+            const response = await fetch(`api/links.php?code=${encodeURIComponent(code)}`);
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                this.setHelp('studentHelp', 'Cod valid! Redirecționare...', 'success');
+                setTimeout(() => {
+                    window.location.href = data.target_url;
+                }, 400);
+            } else {
+                throw new Error(data.error || 'Codul nu a fost găsit.');
+            }
+        } catch (error) {
+            this.setHelp('studentHelp', error.message, 'error');
+            this.elements.btnStudentSubmit.disabled = false;
+            this.elements.btnStudentSubmit.textContent = 'Accesează Formularul';
+        }
+    }
+
+    showToast(message) {
+        this.elements.toast.textContent = message;
+        this.elements.toast.classList.add('visible');
+        
+        if (this.toastTimeout) clearTimeout(this.toastTimeout);
+        this.toastTimeout = setTimeout(() => {
+            this.elements.toast.classList.remove('visible');
+        }, 3000);
     }
 }
 
-function clearRecentLinks() {
-    localStorage.removeItem(STORAGE_KEY);
-    document.getElementById('recent-section').style.display = 'none';
-    showToast('Istoricul a fost șters.');
-}
-
-/**
- * Toast Notification Utility
- */
-let toastTimeout = null;
-function showToast(text) {
-    const toast = document.getElementById('toast');
-    if (!toast) return;
-    toast.textContent = text;
-    toast.classList.add('show');
-
-    if (toastTimeout) clearTimeout(toastTimeout);
-    toastTimeout = setTimeout(() => {
-        toast.classList.remove('show');
-    }, 2800);
-}
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>'"]/g, 
-        tag => ({
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            "'": '&#39;',
-            '"': '&quot;'
-        }[tag] || tag)
-    );
-}
+// Initialize Application
+const app = new VioApp();
