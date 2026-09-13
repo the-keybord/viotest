@@ -221,7 +221,7 @@ class VioApp {
             height: 280,
             colorDark: '#111827',
             colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.H
+            correctLevel: 2 // QRCode.CorrectLevel.H
         });
 
         // Scroll to results
@@ -269,7 +269,7 @@ class VioApp {
             height: 500,
             colorDark: '#000000',
             colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.H
+            correctLevel: 2 // QRCode.CorrectLevel.H
         });
 
         this.elements.modal.classList.add('active');
