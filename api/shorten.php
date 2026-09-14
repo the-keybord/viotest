@@ -36,7 +36,7 @@ if (empty($url)) {
 
 // Auto-prefix protocol if missing (e.g. google.com -> https://google.com)
 if (!preg_match('~^(?:f|ht)tps?://~i', $url)) {
-    $url = 'https://'+$url;
+    $url = 'https://' . $url;
 }
 
 // Validate URL structure
@@ -72,7 +72,7 @@ if (!$saved) {
 }
 
 // Determine base URL dynamically
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) ? '' : '';
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) ? 'https://' : 'http://';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $scriptDir = dirname(dirname($_SERVER['SCRIPT_NAME'] ?? ''));
 $basePath = trim(str_replace('\\', '/', $scriptDir), '/');
