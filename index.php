@@ -1,3 +1,14 @@
+<?php
+// Prevent caching of the main page
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
+// Dynamic cache-busting timestamps for scripts and styles
+$vCss = file_exists(__DIR__ . '/css/styles.css') ? filemtime(__DIR__ . '/css/styles.css') : time();
+$vQr = file_exists(__DIR__ . '/js/qrcode.min.js') ? filemtime(__DIR__ . '/js/qrcode.min.js') : time();
+$vApp = file_exists(__DIR__ . '/js/app.js') ? filemtime(__DIR__ . '/js/app.js') : time();
+?>
 <!DOCTYPE html>
 <html lang="ro">
 <head>
@@ -8,7 +19,7 @@
     <meta http-equiv="Expires" content="0">
     <title>Link & QR Generator</title>
     <meta name="description" content="Platformă minimalistă pentru scurtarea link-urilor și generare QR code.">
-    <link rel="stylesheet" href="css/styles.css?v=2">
+    <link rel="stylesheet" href="css/styles.css?v=<?= $vCss ?>">
 </head>
 <body>
 
@@ -76,7 +87,7 @@
         </div>
     </main>
 
-    <script src="js/qrcode.min.js?v=2"></script>
-    <script src="js/app.js?v=2"></script>
+    <script src="js/qrcode.min.js?v=<?= $vQr ?>"></script>
+    <script src="js/app.js?v=<?= $vApp ?>"></script>
 </body>
 </html>

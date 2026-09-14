@@ -15,9 +15,25 @@ if (str_starts_with($uri, '/data') || preg_match('/\.(db|sqlite|json|lock)$/i', 
     exit;
 }
 
-// If static file exists, serve it
+// If static file exists, serve it with no-cache headers
 if ($uri !== '/' && file_exists($filePath) && !is_dir($filePath)) {
-    return false;
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+    $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+    $mimes = [
+        'js' => 'application/javascript; charset=utf-8',
+        'css' => 'text/css; charset=utf-8',
+        'html' => 'text/html; charset=utf-8',
+        'json' => 'application/json; charset=utf-8',
+        'svg' => 'image/svg+xml',
+        'png' => 'image/png'
+    ];
+    if (isset($mimes[$ext])) {
+        header('Content-Type: ' . $mimes[$ext]);
+    }
+    readfile($filePath);
+    exit;
 }
 
 // Check for straight short code (e.g. /1234)
@@ -28,5 +44,9 @@ if (!empty($trimmed) && preg_match('/^[a-zA-Z0-9_-]+$/', $trimmed)) {
     exit;
 }
 
-// Default to index.html
-require __DIR__ . '/index.html';
+// Default to index.php (or index.html fallback)
+if (file_exists(__DIR__ . '/index.php')) {
+    require __DIR__ . '/index.php';
+} else {
+    require __DIR__ . '/index.html';
+}

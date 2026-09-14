@@ -14,3 +14,12 @@
     # Straight short link redirection: /1234 -> redirect.php?c=1234
     RewriteRule ^([a-zA-Z0-9_-]+)/?$ redirect.php?c=$1 [L,QSA]
 </IfModule>
+
+# Force browsers and proxies to never cache scripts, styles, and HTML
+<IfModule mod_headers.c>
+    <FilesMatch "\.(html|htm|js|css|php|json)$">
+        Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+</IfModule>

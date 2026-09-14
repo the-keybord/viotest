@@ -16,7 +16,7 @@ if (!$code && !empty($_SERVER['REQUEST_URI'])) {
 }
 
 if (!$code) {
-    header('Location: index.html');
+    header('Location: /');
     exit;
 }
 
