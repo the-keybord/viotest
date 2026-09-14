@@ -6,11 +6,14 @@
 (function () {
     'use strict';
 
+    const container = document.getElementById('main-container');
+    const card = document.getElementById('main-card');
     const form = document.getElementById('url-form');
     const input = document.getElementById('url-input');
     const submitBtn = document.getElementById('btn-submit');
     const errorMsg = document.getElementById('error-message');
-    const resultContainer = document.getElementById('result-container');
+    const shortLinkSection = document.getElementById('short-link-section');
+    const qrPanel = document.getElementById('qr-panel');
     const shortLinkAnchor = document.getElementById('short-link-anchor');
     const copyBtn = document.getElementById('btn-copy');
     const copyBtnText = document.getElementById('copy-btn-text');
@@ -88,19 +91,22 @@
             shortLinkAnchor.href = data.short_url;
             shortLinkAnchor.textContent = data.short_url;
 
-            // Generate QR Code
+            // Generate high-resolution QR Code (scales cleanly to big landscape display)
             qrContainer.innerHTML = '';
             currentQrCode = new QRCode(qrContainer, {
                 text: data.short_url,
-                width: 190,
-                height: 190,
+                width: 480,
+                height: 480,
                 colorDark: '#0f172a',
                 colorLight: '#ffffff',
                 correctLevel: QRCode.CorrectLevel.M
             });
 
-            // Show results
-            resultContainer.classList.remove('hidden');
+            // Activate result state & layout expansion
+            container.classList.add('has-results');
+            card.classList.add('has-results');
+            shortLinkSection.classList.remove('hidden');
+            qrPanel.classList.remove('hidden');
 
         } catch (err) {
             showError(err.message || 'Nu s-a putut genera link-ul.');
