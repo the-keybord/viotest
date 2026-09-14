@@ -2,11 +2,15 @@
     RewriteEngine On
     RewriteBase /
 
+    # Prevent direct access to data directory or database files
+    RewriteRule ^data(/.*)?$ - [F,L]
+    RewriteRule \.(db|sqlite|json|lock)$ - [F,L]
+
     # Do not rewrite existing files or directories
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
 
-    # Route short codes (e.g. vio.zece.info/1234 or /ABCD) to redirect.php
+    # Straight short link redirection: /1234 -> redirect.php?c=1234
     RewriteRule ^([a-zA-Z0-9_-]+)/?$ redirect.php?c=$1 [L,QSA]
 </IfModule>

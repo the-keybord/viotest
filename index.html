@@ -3,117 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>vio.zece.info - Partajare Formulare și Teste</title>
-    <meta name="description" content="Platformă rapidă pentru partajarea testelor și formularelor în clasă.">
-    <link rel="stylesheet" href="css/styles.css?v=4">
+    <title>Link & QR Generator</title>
+    <meta name="description" content="Platformă minimalistă pentru scurtarea link-urilor și generare QR code.">
+    <link rel="stylesheet" href="css/styles.css">
 </head>
-<body class="app-layout">
+<body>
 
-    <header class="header">
-        <div class="header-inner">
-            <a href="/" class="brand">
-                <svg class="brand-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                </svg>
-                vio.zece.info
-            </a>
-        </div>
-    </header>
-
-    <main class="main-content">
-        <h1 class="page-title">Partajare Rapidă pentru Clasă</h1>
-        <p class="page-description">Lipește link-ul oricărui formular, test sau document pentru a genera instant un cod QR și un link scurt, ușor de accesat de către elevi.</p>
-
+    <main class="container">
         <div class="card">
-            <div class="card-header">
-                <div class="tabs-container">
-                    <button class="tab-button active" id="tab-teacher" onclick="app.switchMode('teacher')">Profesor (Creează)</button>
-                    <button class="tab-button" id="tab-student" onclick="app.switchMode('student')">Elev (Introdu Cod)</button>
-                </div>
-            </div>
+            <header class="card-header">
+                <h1 class="title">Link & QR</h1>
+                <p class="subtitle">Introdu un link pentru a genera codul scurt și codul QR.</p>
+            </header>
 
-            <div class="card-body">
-                <!-- TEACHER VIEW -->
-                <div id="view-teacher">
-                    <div class="form-group">
-                        <label for="url-input" class="form-label">Link-ul formularului (Google Forms, Quiz, etc.)</label>
-                        <div class="input-wrapper">
-                            <svg class="input-icon-left" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            <form id="url-form" class="url-form" novalidate>
+                <div class="input-group">
+                    <input 
+                        type="url" 
+                        id="url-input" 
+                        name="url"
+                        class="url-input" 
+                        placeholder="Lipește link-ul aici (ex: https://exemplu.ro)" 
+                        autocomplete="off" 
+                        spellcheck="false"
+                        required
+                    >
+                    <button type="submit" id="btn-submit" class="btn-submit">
+                        Generează
+                    </button>
+                </div>
+                <div id="error-message" class="error-message" aria-live="polite"></div>
+            </form>
+
+            <!-- Results Section (hidden by default) -->
+            <div id="result-container" class="result-container hidden">
+                <div class="result-divider"></div>
+
+                <!-- Short Link Result -->
+                <div class="result-block">
+                    <span class="result-label">Link Scurt:</span>
+                    <div class="short-link-box">
+                        <a id="short-link-anchor" href="#" target="_blank" class="short-link-text"></a>
+                        <button type="button" id="btn-copy" class="btn-copy" title="Copiază link-ul">
+                            <svg class="copy-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                             </svg>
-                            <input type="text" id="url-input" class="form-input has-icon" placeholder="https://forms.gle/..." autocomplete="off">
-                            <button class="input-action-right" id="btn-paste" onclick="app.pasteFromClipboard()">Lipește</button>
-                        </div>
-                        <div id="url-help" class="help-text">Introduceți adresa completă a testului.</div>
-                    </div>
-
-                    <button id="btn-generate" class="btn btn-primary btn-large" onclick="app.generateLink()">
-                        Generează Cod & QR
-                    </button>
-
-                    <!-- RESULTS PANEL -->
-                    <div id="results-panel" class="results-panel hidden">
-                        <div class="short-code-display">
-                            <div class="short-code-label">Link-ul pentru elevi</div>
-                            <div class="short-code-value">
-                                <span id="domain-prefix">vio.zece.info/</span>
-                                <span id="short-code-text">----</span>
-                            </div>
-                            <div style="display: flex; gap: 0.5rem; justify-content: center;">
-                                <button class="btn btn-secondary" onclick="app.copyShortLink()">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                                    Copiază Link
-                                </button>
-                                <a id="btn-open-link" href="#" target="_blank" class="btn btn-secondary">
-                                    Deschide
-                                </a>
-                            </div>
-                        </div>
-
-                        <div class="qr-section">
-                            <div class="qr-container" id="qrcode-container"></div>
-                            <p class="help-text" style="margin-bottom: 1.25rem;">Afișează acest cod pe tablă pentru scanare rapidă.</p>
-                            <div class="qr-actions">
-                                <button class="btn btn-primary" onclick="app.openProjectorMode()">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>
-                                    Mod Proiector
-                                </button>
-                                <button class="btn btn-secondary" onclick="app.resetForm()">Generează Alt Link</button>
-                            </div>
-                        </div>
+                            <span id="copy-btn-text">Copiază</span>
+                        </button>
                     </div>
                 </div>
 
-                <!-- STUDENT VIEW -->
-                <div id="view-student" class="hidden student-input-container">
-                    <h2 style="margin-bottom: 0.5rem;">Intră la test</h2>
-                    <p class="help-text">Introdu codul primit de la profesor.</p>
-                    
-                    <input type="text" id="student-code-input" class="student-code-input" placeholder="1234" maxlength="6" autocomplete="off">
-                    <div id="student-help" class="help-text" style="margin-bottom: 1.5rem;">Așteaptă introducerea completă...</div>
-                    
-                    <button id="btn-student-submit" class="btn btn-primary btn-large" onclick="app.studentSubmit()">
-                        Accesează Formularul
+                <!-- QR Code Result -->
+                <div class="result-block qr-block">
+                    <span class="result-label">Cod QR:</span>
+                    <div class="qr-wrapper">
+                        <div id="qrcode" class="qrcode"></div>
+                    </div>
+                    <button type="button" id="btn-download-qr" class="btn-download">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Descarcă QR
                     </button>
                 </div>
-
             </div>
         </div>
     </main>
 
-    <!-- PROJECTOR MODAL -->
-    <div id="projector-modal" class="modal-overlay">
-        <button class="modal-close" onclick="app.closeProjectorMode()">✕ Închide (ESC)</button>
-        <div class="projector-domain"><span>Accesați: </span><span id="proj-domain">vio.zece.info/</span></div>
-        <div class="projector-code" id="proj-code">----</div>
-        <div class="projector-qr-container" id="proj-qr"></div>
-    </div>
-
-    <div id="toast" class="toast"></div>
-
     <script src="js/qrcode.min.js"></script>
-    <script src="js/app.js?v=4"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>
