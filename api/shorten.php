@@ -72,7 +72,7 @@ if (!$saved) {
 }
 
 // Determine base URL dynamically
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) ? 'https://' : 'http://';
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) ? '' : '';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $scriptDir = dirname(dirname($_SERVER['SCRIPT_NAME'] ?? ''));
 $basePath = trim(str_replace('\\', '/', $scriptDir), '/');
