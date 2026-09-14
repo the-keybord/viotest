@@ -8,6 +8,7 @@
     --primary-color: #0f172a;
     --primary-hover: #1e293b;
     --accent-color: #2563eb;
+    --accent-hover: #1d4ed8;
     --error-color: #dc2626;
     --success-color: #16a34a;
     --radius-lg: 16px;
@@ -38,7 +39,6 @@ body {
 .container {
     width: 100%;
     max-width: 520px;
-    transition: max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .card {
@@ -47,15 +47,11 @@ body {
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
     padding: 2.25rem 2rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    transition: all 0.3s ease;
 }
 
 .card-header {
-    text-align: left;
-    margin-bottom: 1.25rem;
+    text-align: center;
+    margin-bottom: 2rem;
 }
 
 .title {
@@ -63,7 +59,7 @@ body {
     font-weight: 700;
     letter-spacing: -0.025em;
     color: var(--text-primary);
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.5rem;
 }
 
 .subtitle {
@@ -143,6 +139,7 @@ body {
     font-size: 0.85rem;
     color: var(--error-color);
     min-height: 1.25rem;
+    margin-top: 0.25rem;
     display: none;
 }
 
@@ -150,9 +147,29 @@ body {
     display: block;
 }
 
-/* Results: Short Link */
-.short-link-section {
-    margin-top: 1.25rem;
+/* Results Section */
+.result-container {
+    margin-top: 1.75rem;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.result-container.hidden {
+    display: none;
+}
+
+.result-divider {
+    height: 1px;
+    background-color: var(--border-color);
+    margin-bottom: 1.75rem;
+}
+
+.result-block {
+    margin-bottom: 1.75rem;
+}
+
+.result-block:last-child {
+    margin-bottom: 0;
 }
 
 .result-label {
@@ -162,7 +179,7 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-secondary);
-    margin-bottom: 0.45rem;
+    margin-bottom: 0.5rem;
 }
 
 .short-link-box {
@@ -177,7 +194,7 @@ body {
 }
 
 .short-link-text {
-    font-size: 1.05rem;
+    font-size: 0.95rem;
     font-weight: 600;
     color: var(--accent-color);
     text-decoration: none;
@@ -217,17 +234,14 @@ body {
     border-color: #a7f3d0;
 }
 
-/* Results: QR Code Panel */
-.card-right {
+/* QR Code Display */
+.qr-block {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding-top: 1.25rem;
-    border-top: 1px solid var(--border-color);
 }
 
-.qr-title {
+.qr-block .result-label {
     align-self: flex-start;
 }
 
@@ -237,29 +251,26 @@ body {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
-    display: flex;
+    display: inline-flex;
     justify-content: center;
     align-items: center;
-    margin-top: 0.25rem;
     margin-bottom: 0.85rem;
-    max-width: 100%;
 }
 
 .qrcode {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 220px;
-    height: 220px;
+    width: 190px;
+    height: 190px;
 }
 
 .qrcode img,
 .qrcode canvas,
 .qrcode svg {
     display: block;
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: contain;
+    max-width: 100%;
+    height: auto;
 }
 
 .btn-download {
@@ -281,84 +292,4 @@ body {
     color: var(--text-primary);
     border-color: #94a3b8;
     background-color: #f8fafc;
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* =========================================================
-   LANDSCAPE MODE / WIDE SCREEN: BIG QR ON RIGHT HALF
-   ========================================================= */
-@media (orientation: landscape) and (min-width: 680px), (min-width: 860px) {
-    .container.has-results {
-        max-width: 1000px;
-        width: 92vw;
-    }
-
-    .card.has-results {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        column-gap: 2.5rem;
-        row-gap: 1.5rem;
-        align-items: center;
-        padding: 2.5rem;
-    }
-
-    .card.has-results .card-left {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        min-width: 0;
-    }
-
-    .card.has-results .card-right {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        border-top: none;
-        border-left: 1px solid var(--border-color);
-        padding-top: 0;
-        padding-left: 2.5rem;
-        width: 100%;
-        height: 100%;
-    }
-
-    .card.has-results .qr-title {
-        align-self: center;
-        margin-bottom: 0.5rem;
-    }
-
-    .card.has-results .qr-wrapper {
-        padding: 1.25rem;
-        margin-bottom: 1rem;
-    }
-
-    /* Big QR Code sizing dynamically scaling with viewport */
-    .card.has-results .qrcode {
-        width: min(40vw, 55vh, 360px);
-        height: min(40vw, 55vh, 360px);
-    }
-}
-
-/* Extra large screens / projectors */
-@media (min-width: 1200px) and (min-height: 600px) {
-    .container.has-results {
-        max-width: 1120px;
-    }
-
-    .card.has-results {
-        column-gap: 3.5rem;
-        padding: 3rem;
-    }
-
-    .card.has-results .card-right {
-        padding-left: 3.5rem;
-    }
-
-    .card.has-results .qrcode {
-        width: min(38vw, 60vh, 420px);
-        height: min(38vw, 60vh, 420px);
-    }
 }

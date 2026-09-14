@@ -9,37 +9,38 @@
 </head>
 <body>
 
-    <main class="container" id="main-container">
-        <div class="card" id="main-card">
-            
-            <!-- Left Panel: Input & Short Link -->
-            <div class="card-left">
-                <header class="card-header">
-                    <h1 class="title">Link & QR</h1>
-                    <p class="subtitle">Introdu un link pentru a genera codul scurt și codul QR.</p>
-                </header>
+    <main class="container">
+        <div class="card">
+            <header class="card-header">
+                <h1 class="title">Link & QR</h1>
+                <p class="subtitle">Introdu un link pentru a genera codul scurt și codul QR.</p>
+            </header>
 
-                <form id="url-form" class="url-form" novalidate>
-                    <div class="input-group">
-                        <input 
-                            type="url" 
-                            id="url-input" 
-                            name="url"
-                            class="url-input" 
-                            placeholder="Lipește link-ul aici (ex: https://exemplu.ro)" 
-                            autocomplete="off" 
-                            spellcheck="false"
-                            required
-                        >
-                        <button type="submit" id="btn-submit" class="btn-submit">
-                            Generează
-                        </button>
-                    </div>
-                    <div id="error-message" class="error-message" aria-live="polite"></div>
-                </form>
+            <form id="url-form" class="url-form" novalidate>
+                <div class="input-group">
+                    <input 
+                        type="url" 
+                        id="url-input" 
+                        name="url"
+                        class="url-input" 
+                        placeholder="Lipește link-ul aici (ex: https://exemplu.ro)" 
+                        autocomplete="off" 
+                        spellcheck="false"
+                        required
+                    >
+                    <button type="submit" id="btn-submit" class="btn-submit">
+                        Generează
+                    </button>
+                </div>
+                <div id="error-message" class="error-message" aria-live="polite"></div>
+            </form>
 
-                <!-- Short Link Section -->
-                <div id="short-link-section" class="short-link-section hidden">
+            <!-- Results Section (hidden by default) -->
+            <div id="result-container" class="result-container hidden">
+                <div class="result-divider"></div>
+
+                <!-- Short Link Result -->
+                <div class="result-block">
                     <span class="result-label">Link Scurt:</span>
                     <div class="short-link-box">
                         <a id="short-link-anchor" href="#" target="_blank" class="short-link-text"></a>
@@ -52,24 +53,23 @@
                         </button>
                     </div>
                 </div>
-            </div>
 
-            <!-- Right Panel: Big QR Code (visible in landscape / split view) -->
-            <div class="card-right hidden" id="qr-panel">
-                <span class="result-label qr-title">Cod QR:</span>
-                <div class="qr-wrapper">
-                    <div id="qrcode" class="qrcode"></div>
+                <!-- QR Code Result -->
+                <div class="result-block qr-block">
+                    <span class="result-label">Cod QR:</span>
+                    <div class="qr-wrapper">
+                        <div id="qrcode" class="qrcode"></div>
+                    </div>
+                    <button type="button" id="btn-download-qr" class="btn-download">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Descarcă QR
+                    </button>
                 </div>
-                <button type="button" id="btn-download-qr" class="btn-download">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    Descarcă QR
-                </button>
             </div>
-
         </div>
     </main>
 
