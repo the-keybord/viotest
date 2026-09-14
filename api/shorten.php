@@ -36,7 +36,7 @@ if (empty($url)) {
 
 // Auto-prefix protocol if missing (e.g. google.com -> https://google.com)
 if (!preg_match('~^(?:f|ht)tps?://~i', $url)) {
-    $url = 'https://' . $url;
+    $url = $url;
 }
 
 // Validate URL structure
